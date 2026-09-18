@@ -840,14 +840,10 @@ public partial class MainWindow : Window
 
             RefreshTrustedKeysGrid();
 
-            // Восстанавливаем выделение обновленной записи в таблице
-            var refreshed = _trustedKeyEntries.FirstOrDefault(k => string.Equals(k.KeyId, targetKeyId, StringComparison.OrdinalIgnoreCase));
-            if (refreshed is not null)
-            {
-                TrustedKeysGrid.SelectedItem = refreshed;
-            }
-
             MessageBox.Show($"Имя ключа обновлено на «{newName}».", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            // После подтверждения снимаем выбор с ключа, что автоматически скрывает кнопки действий
+            TrustedKeysGrid.SelectedItem = null;
         }
     }
 

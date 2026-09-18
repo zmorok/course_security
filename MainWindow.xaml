@@ -442,8 +442,8 @@
                                             <ColumnDefinition Width="8"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <Button Grid.Column="0" Content="Экспорт закрытого..." ToolTip="Сохранить закрытый ключ в файл PEM" Style="{StaticResource SecondaryButton}" Click="ExportPrivateKey_Click"/>
-                                        <Button Grid.Column="2" Content="Экспорт открытого..." ToolTip="Сохранить открытый ключ в файл PEM" Style="{StaticResource SecondaryButton}" Click="ExportPublicKey_Click"/>
+                                        <Button Grid.Column="0" Content="Экспорт закрытого ключа" ToolTip="Сохранить закрытый ключ в файл PEM" Style="{StaticResource SecondaryButton}" Click="ExportPrivateKey_Click"/>
+                                        <Button Grid.Column="2" Content="Экспорт открытого ключа" ToolTip="Сохранить открытый ключ в файл PEM" Style="{StaticResource SecondaryButton}" Click="ExportPublicKey_Click"/>
                                     </Grid>
 
                                     <Separator Margin="0,4,0,12"/>
@@ -455,8 +455,8 @@
                                             <ColumnDefinition Width="8"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <Button Grid.Column="0" Content="Импорт закрытого..." ToolTip="Загрузить закрытый ключ из файла PEM" Style="{StaticResource SecondaryButton}" Click="ImportPrivateKey_Click"/>
-                                        <Button Grid.Column="2" Content="Добавить в реестр" ToolTip="Добавить текущий открытый ключ в реестр доверенных" Style="{StaticResource SecondaryButton}" Click="AddCurrentKeyToTrusted_Click"/>
+                                        <Button Grid.Column="0" Content="Импорт закрытого ключа" ToolTip="Загрузить закрытый ключ из файла PEM" Style="{StaticResource SecondaryButton}" Click="ImportPrivateKey_Click"/>
+                                        <Button Grid.Column="2" Content="Добавить открытый в реестр" ToolTip="Добавить текущий открытый ключ в реестр доверенных" Style="{StaticResource SecondaryButton}" Click="AddCurrentKeyToTrusted_Click"/>
                                     </Grid>
 
                                     <!-- Предпросмотр ключей -->
