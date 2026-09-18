@@ -758,16 +758,58 @@ public partial class MainWindow : Window
         }
     }
 
-    private void RemoveTrustedKey_Click(object sender, RoutedEventArgs e)
+    private void DeleteAliasIconBtn_Click(object sender, RoutedEventArgs e)
+    {
+        DeleteSelectedTrustedKey();
+    }
+
+    private void DeleteSelectedTrustedKey()
     {
         if (TrustedKeysGrid.SelectedItem is TrustedKeyEntry selected)
         {
-            if (MessageBox.Show($"Удалить доверенный ключ «{selected.Name}» (Key ID: {selected.KeyId})?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            var confirm = MessageBox.Show(
+                $"Вы действительно хотите удалить ключ «{selected.Name}» (Key ID: {selected.KeyId})?",
+                "Подтверждение удаления",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirm != MessageBoxResult.Yes)
             {
-                _trustedKeys.Remove(selected.KeyId);
-                RefreshTrustedKeysGrid();
-                TrustedKeysGrid.SelectedItem = null;
+                return;
             }
+
+            _trustedKeys.Remove(selected.KeyId);
+            RefreshTrustedKeysGrid();
+
+            // Если был удален текущий рабочий ключ, пробуем переключиться на другой доступный ключ с закрытой частью
+            if (string.Equals(selected.KeyId, _currentWorkingKeyId, StringComparison.OrdinalIgnoreCase))
+            {
+                var remaining = _trustedKeys.GetAllEntries();
+                var nextWorking = remaining
+                    .OrderByDescending(k => k.Id)
+                    .FirstOrDefault(k => _trustedKeys.TryGetPrivateKeyPem(k.KeyId, out _));
+
+                if (nextWorking is not null && _trustedKeys.TryGetPrivateKeyPem(nextWorking.KeyId, out var privPem) && !string.IsNullOrEmpty(privPem))
+                {
+                    _currentPrivateKey?.Dispose();
+                    _currentPrivateKey = _keyManager.ImportPrivatePem(privPem);
+                    _currentWorkingKeyId = nextWorking.KeyId;
+                    _currentWorkingKeyAlias = nextWorking.Name;
+                    CreationKeyIdDisplay.Text = nextWorking.KeyId;
+                }
+                else
+                {
+                    _currentPrivateKey?.Dispose();
+                    _currentPrivateKey = null;
+                    _currentWorkingKeyId = string.Empty;
+                    _currentWorkingKeyAlias = string.Empty;
+                    CreationKeyIdDisplay.Text = string.Empty;
+                }
+            }
+
+            // Снимаем выбор с таблицы - это вызовет TrustedKeysGrid_SelectionChanged,
+            // очистит или заполнит актуальными рабочими данными поля и скроет панель кнопок [✓][✕][🗑]
+            TrustedKeysGrid.SelectedItem = null;
         }
         else
         {

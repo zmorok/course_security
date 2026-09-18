@@ -412,7 +412,7 @@
 
                                         <TextBox x:Name="KeyAliasInput" Text="Центральный орган сертификации" Padding="8,6" VerticalContentAlignment="Center"/>
 
-                                        <!-- Кнопки-иконки для сохранения изменений и отмены/снятия выбора -->
+                                        <!-- Кнопки-иконки для сохранения изменений, отмены/снятия выбора и удаления ключа -->
                                         <StackPanel x:Name="AliasActionButtonsPanel" Grid.Column="1" Orientation="Horizontal" Visibility="Collapsed" VerticalAlignment="Center" Margin="6,0,0,0">
                                             <Button x:Name="SaveAliasIconBtn" Width="30" Height="30" Margin="0,0,4,0" ToolTip="Сохранить изменения названия (✓)" Click="SaveAliasIconBtn_Click" Cursor="Hand" Background="#DEF7EC" BorderBrush="#31C48D" BorderThickness="1">
                                                 <Button.Resources>
@@ -422,13 +422,21 @@
                                                 </Button.Resources>
                                                 <TextBlock Text="✓" FontWeight="Bold" FontSize="15" Foreground="#046C4E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Button>
-                                            <Button x:Name="CancelAliasIconBtn" Width="30" Height="30" ToolTip="Отменить изменения и снять выбор (✕)" Click="CancelAliasIconBtn_Click" Cursor="Hand" Background="#FDE8E8" BorderBrush="#F98080" BorderThickness="1">
+                                            <Button x:Name="CancelAliasIconBtn" Width="30" Height="30" Margin="0,0,4,0" ToolTip="Отменить изменения и снять выбор (✕)" Click="CancelAliasIconBtn_Click" Cursor="Hand" Background="#F3F4F6" BorderBrush="#D1D5DB" BorderThickness="1">
                                                 <Button.Resources>
                                                     <Style TargetType="Border">
                                                         <Setter Property="CornerRadius" Value="4"/>
                                                     </Style>
                                                 </Button.Resources>
-                                                <TextBlock Text="✕" FontWeight="Bold" FontSize="13" Foreground="#C81E1E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <TextBlock Text="✕" FontWeight="Bold" FontSize="13" Foreground="#4B5563" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Button>
+                                            <Button x:Name="DeleteAliasIconBtn" Width="30" Height="30" ToolTip="Удалить выбранный ключ из реестра (🗑)" Click="DeleteAliasIconBtn_Click" Cursor="Hand" Background="#FDE8E8" BorderBrush="#F98080" BorderThickness="1">
+                                                <Button.Resources>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="CornerRadius" Value="4"/>
+                                                    </Style>
+                                                </Button.Resources>
+                                                <TextBlock Text="🗑" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Button>
                                         </StackPanel>
                                     </Grid>
@@ -515,8 +523,7 @@
                             </DataGrid>
 
                             <WrapPanel Grid.Row="2">
-                                <Button Content="Импортировать открытый ключ из файла..." Style="{StaticResource PrimaryButton}" Click="ImportTrustedKeyFile_Click" Margin="0,0,8,0"/>
-                                <Button Content="Удалить выбранный ключ" Style="{StaticResource SecondaryButton}" Click="RemoveTrustedKey_Click"/>
+                                <Button Content="Импортировать открытый ключ из файла..." Style="{StaticResource PrimaryButton}" Click="ImportTrustedKeyFile_Click"/>
                             </WrapPanel>
                         </Grid>
                     </Border>
