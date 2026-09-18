@@ -404,24 +404,60 @@
                                     <Button Content="Сгенерировать новую пару ключей" Style="{StaticResource PrimaryButton}" Click="GenerateNewKeyPair_Click" Margin="0,0,0,12"/>
 
                                     <TextBlock Text="Издатель / Название ключа:" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBox x:Name="KeyAliasInput" Text="Центральный орган сертификации" Padding="6" Margin="0,0,0,6"/>
-                                    <Button x:Name="SaveKeyAliasBtn" Content="Сохранить изменения" Style="{StaticResource SecondaryButton}" Click="SaveKeyAliasBtn_Click" Visibility="Collapsed" HorizontalAlignment="Left" Margin="0,0,0,12"/>
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBox x:Name="KeyAliasInput" Text="Центральный орган сертификации" Padding="8,6" VerticalContentAlignment="Center"/>
+
+                                        <!-- Кнопки-иконки для сохранения изменений и отмены/снятия выбора -->
+                                        <StackPanel x:Name="AliasActionButtonsPanel" Grid.Column="1" Orientation="Horizontal" Visibility="Collapsed" VerticalAlignment="Center" Margin="6,0,0,0">
+                                            <Button x:Name="SaveAliasIconBtn" Width="30" Height="30" Margin="0,0,4,0" ToolTip="Сохранить изменения названия (✓)" Click="SaveAliasIconBtn_Click" Cursor="Hand" Background="#DEF7EC" BorderBrush="#31C48D" BorderThickness="1">
+                                                <Button.Resources>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="CornerRadius" Value="4"/>
+                                                    </Style>
+                                                </Button.Resources>
+                                                <TextBlock Text="✓" FontWeight="Bold" FontSize="15" Foreground="#046C4E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Button>
+                                            <Button x:Name="CancelAliasIconBtn" Width="30" Height="30" ToolTip="Отменить изменения и снять выбор (✕)" Click="CancelAliasIconBtn_Click" Cursor="Hand" Background="#FDE8E8" BorderBrush="#F98080" BorderThickness="1">
+                                                <Button.Resources>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="CornerRadius" Value="4"/>
+                                                    </Style>
+                                                </Button.Resources>
+                                                <TextBlock Text="✕" FontWeight="Bold" FontSize="13" Foreground="#C81E1E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
 
                                     <TextBlock Text="Идентификатор текущего ключа (Key ID):" FontWeight="SemiBold"/>
                                     <TextBox x:Name="CurrentKeyIdBox" IsReadOnly="True" Background="#F6F8FA" Padding="6" Margin="0,3,0,12"/>
 
-                                    <WrapPanel Margin="0,0,0,8">
-                                        <Button Content="Сохранить закрытый ключ в файл..." Style="{StaticResource SecondaryButton}" Click="ExportPrivateKey_Click" Margin="0,0,8,8"/>
-                                        <Button Content="Сохранить открытый ключ в файл..." Style="{StaticResource SecondaryButton}" Click="ExportPublicKey_Click" Margin="0,0,8,8"/>
-                                    </WrapPanel>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Content="Экспорт закрытого..." ToolTip="Сохранить закрытый ключ в файл PEM" Style="{StaticResource SecondaryButton}" Click="ExportPrivateKey_Click"/>
+                                        <Button Grid.Column="2" Content="Экспорт открытого..." ToolTip="Сохранить открытый ключ в файл PEM" Style="{StaticResource SecondaryButton}" Click="ExportPublicKey_Click"/>
+                                    </Grid>
 
                                     <Separator Margin="0,4,0,12"/>
 
                                     <TextBlock Text="Управление текущим ключом:" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <WrapPanel Margin="0,0,0,12">
-                                        <Button Content="Загрузить закрытый ключ из файла..." Style="{StaticResource SecondaryButton}" Click="ImportPrivateKey_Click" Margin="0,0,8,8"/>
-                                        <Button Content="Добавить открытый ключ в доверенные" Style="{StaticResource SecondaryButton}" Click="AddCurrentKeyToTrusted_Click" Margin="0,0,8,8"/>
-                                    </WrapPanel>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Content="Импорт закрытого..." ToolTip="Загрузить закрытый ключ из файла PEM" Style="{StaticResource SecondaryButton}" Click="ImportPrivateKey_Click"/>
+                                        <Button Grid.Column="2" Content="Добавить в реестр" ToolTip="Добавить текущий открытый ключ в реестр доверенных" Style="{StaticResource SecondaryButton}" Click="AddCurrentKeyToTrusted_Click"/>
+                                    </Grid>
 
                                     <!-- Предпросмотр ключей -->
                                     <TextBlock Text="Открытый ключ для передачи (Public Key PEM):" FontWeight="SemiBold" Margin="0,0,0,4"/>
@@ -448,18 +484,39 @@
                             </StackPanel>
 
                             <DataGrid Grid.Row="1" x:Name="TrustedKeysGrid" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" SelectionMode="Single" Margin="0,6,0,12" BorderThickness="1" BorderBrush="#D0D7DE" SelectionChanged="TrustedKeysGrid_SelectionChanged">
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <Style.Resources>
+                                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#0969DA"/>
+                                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#FFFFFF"/>
+                                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#0969DA"/>
+                                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="#FFFFFF"/>
+                                        </Style.Resources>
+                                    </Style>
+                                </DataGrid.RowStyle>
+                                <DataGrid.CellStyle>
+                                    <Style TargetType="DataGridCell">
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Padding" Value="4,3"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="#0969DA"/>
+                                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGrid.CellStyle>
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="№" Binding="{Binding Id}" Width="45"/>
-                                    <DataGridTextColumn Header="Издатель / Название" Binding="{Binding Name}" Width="150"/>
-                                    <DataGridTextColumn Header="Key ID" Binding="{Binding KeyId}" Width="150"/>
-                                    <DataGridTextColumn Header="Дата добавления" Binding="{Binding AddedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" Width="150"/>
+                                    <DataGridTextColumn Header="№" Binding="{Binding Id}" Width="40"/>
+                                    <DataGridTextColumn Header="Издатель / Название" Binding="{Binding Name}" Width="*"/>
+                                    <DataGridTextColumn Header="Key ID" Binding="{Binding KeyId}" Width="140"/>
+                                    <DataGridTextColumn Header="Дата добавления" Binding="{Binding AddedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" Width="145"/>
                                 </DataGrid.Columns>
                             </DataGrid>
 
                             <WrapPanel Grid.Row="2">
                                 <Button Content="Импортировать открытый ключ из файла..." Style="{StaticResource PrimaryButton}" Click="ImportTrustedKeyFile_Click" Margin="0,0,8,0"/>
-                                <Button Content="Удалить выбранный ключ" Style="{StaticResource SecondaryButton}" Click="RemoveTrustedKey_Click" Margin="0,0,8,0"/>
-                                <Button Content="Снять выбор" Style="{StaticResource SecondaryButton}" Click="DeselectKey_Click"/>
+                                <Button Content="Удалить выбранный ключ" Style="{StaticResource SecondaryButton}" Click="RemoveTrustedKey_Click"/>
                             </WrapPanel>
                         </Grid>
                     </Border>

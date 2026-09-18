@@ -19,7 +19,7 @@ namespace QrAuthenticity;
 public partial class MainWindow : Window
 {
     private readonly KeyManager _keyManager = new();
-    private readonly TrustedKeyStore _trustedKeys = new();
+    private readonly TrustedKeyStore _trustedKeys = new(persist: true);
     private readonly PayloadCanonicalizer _canonicalizer = new();
     private readonly PayloadCodec _codec = new();
     private readonly SignatureService _signatureService = new();
@@ -67,9 +67,36 @@ public partial class MainWindow : Window
         DistortionTypeCombo.ItemsSource = ImageDistortionService.AvailableDistortions;
         DistortionTypeCombo.SelectedItem = ImageDistortionService.DistortionOcclusion;
 
-        // Создаем начальный доверенный ключ
-        string alias = string.IsNullOrWhiteSpace(KeyAliasInput.Text) ? "Центральный орган сертификации" : KeyAliasInput.Text.Trim();
-        GenerateAndSetWorkingKey(2048, alias);
+        // Если в хранилище уже есть ранее сохраненные ключи - восстанавливаем активный ключ
+        var existingEntries = _trustedKeys.GetAllEntries();
+        var activeEntry = existingEntries.Count > 0
+            ? existingEntries.OrderByDescending(e => e.Id).FirstOrDefault(e => _trustedKeys.TryGetPrivateKeyPem(e.KeyId, out _))
+            : null;
+
+        if (activeEntry is not null && _trustedKeys.TryGetPrivateKeyPem(activeEntry.KeyId, out var savedPrivatePem) && !string.IsNullOrEmpty(savedPrivatePem))
+        {
+            _currentPrivateKey?.Dispose();
+            _currentPrivateKey = _keyManager.ImportPrivatePem(savedPrivatePem);
+
+            _currentWorkingKeyId = activeEntry.KeyId;
+            _currentWorkingKeyAlias = activeEntry.Name;
+
+            CurrentKeyIdBox.Text = activeEntry.KeyId;
+            KeyAliasInput.Text = activeEntry.Name;
+            AliasActionButtonsPanel.Visibility = Visibility.Collapsed;
+            CreationKeyIdDisplay.Text = activeEntry.KeyId;
+
+            PublicKeyPreviewBox.Text = activeEntry.PublicPem;
+            PrivateKeyPreviewBox.Text = savedPrivatePem;
+
+            RefreshTrustedKeysGrid();
+        }
+        else
+        {
+            // Создаем начальный доверенный ключ при первом запуске
+            string alias = string.IsNullOrWhiteSpace(KeyAliasInput.Text) ? "Центральный орган сертификации" : KeyAliasInput.Text.Trim();
+            GenerateAndSetWorkingKey(2048, alias);
+        }
 
         // Автоматически формируем первый валидный QR-код
         CreateSignedQr();
@@ -87,7 +114,7 @@ public partial class MainWindow : Window
 
         CurrentKeyIdBox.Text = keyId;
         KeyAliasInput.Text = keyAlias;
-        SaveKeyAliasBtn.Visibility = Visibility.Collapsed;
+        AliasActionButtonsPanel.Visibility = Visibility.Collapsed;
         CreationKeyIdDisplay.Text = keyId;
 
         var publicPem = _keyManager.ExportPublicPem(_currentPrivateKey);
@@ -97,6 +124,8 @@ public partial class MainWindow : Window
         PublicKeyPreviewBox.Text = publicPem;
         PrivateKeyPreviewBox.Text = privatePem;
 
+        // Сохраняем закрытый ключ на диск и регистрируем в реестре
+        _trustedKeys.SavePrivateKey(keyId, privatePem);
         _trustedKeys.AddPublicKey(publicPem, keyAlias);
         RefreshTrustedKeysGrid();
     }
@@ -663,11 +692,16 @@ public partial class MainWindow : Window
 
                 CurrentKeyIdBox.Text = keyId;
                 KeyAliasInput.Text = _currentWorkingKeyAlias;
-                SaveKeyAliasBtn.Visibility = Visibility.Collapsed;
+                AliasActionButtonsPanel.Visibility = Visibility.Collapsed;
                 CreationKeyIdDisplay.Text = keyId;
 
                 PrivateKeyPreviewBox.Text = pem;
-                PublicKeyPreviewBox.Text = _keyManager.ExportPublicPem(_currentPrivateKey);
+                var publicPem = _keyManager.ExportPublicPem(_currentPrivateKey);
+                PublicKeyPreviewBox.Text = publicPem;
+
+                _trustedKeys.SavePrivateKey(keyId, pem);
+                _trustedKeys.AddPublicKey(publicPem, _currentWorkingKeyAlias);
+                RefreshTrustedKeysGrid();
 
                 MessageBox.Show($"Закрытый ключ успешно загружен.\nKey ID: {keyId}", "Ключ загружен", MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -741,11 +775,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void DeselectKey_Click(object sender, RoutedEventArgs e)
-    {
-        TrustedKeysGrid.SelectedItem = null;
-    }
-
     private void TrustedKeysGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         if (TrustedKeysGrid.SelectedItem is TrustedKeyEntry selected)
@@ -754,17 +783,21 @@ public partial class MainWindow : Window
             CurrentKeyIdBox.Text = selected.KeyId;
             PublicKeyPreviewBox.Text = selected.PublicPem;
 
-            // Если выбран текущий локальный рабочий ключ, показываем его закрытую часть, иначе помечаем, что закрытой части нет
-            if (_currentPrivateKey is not null && string.Equals(selected.KeyId, _currentWorkingKeyId, StringComparison.OrdinalIgnoreCase))
+            // Проверяем наличие закрытого ключа в локальном хранилище ключей
+            if (_trustedKeys.TryGetPrivateKeyPem(selected.KeyId, out var privatePem) && !string.IsNullOrEmpty(privatePem))
+            {
+                PrivateKeyPreviewBox.Text = privatePem;
+            }
+            else if (_currentPrivateKey is not null && string.Equals(selected.KeyId, _currentWorkingKeyId, StringComparison.OrdinalIgnoreCase))
             {
                 PrivateKeyPreviewBox.Text = _keyManager.ExportPrivatePem(_currentPrivateKey);
             }
             else
             {
-                PrivateKeyPreviewBox.Text = "(Закрытый ключ отсутствует. Это внешний доверенный открытый ключ проверяющей стороны)";
+                PrivateKeyPreviewBox.Text = "(Закрытый ключ отсутствует на этом устройстве. Это внешний доверенный открытый ключ проверяющей стороны)";
             }
 
-            SaveKeyAliasBtn.Visibility = Visibility.Visible;
+            AliasActionButtonsPanel.Visibility = Visibility.Visible;
         }
         else
         {
@@ -782,11 +815,11 @@ public partial class MainWindow : Window
                 PrivateKeyPreviewBox.Text = string.Empty;
             }
 
-            SaveKeyAliasBtn.Visibility = Visibility.Collapsed;
+            AliasActionButtonsPanel.Visibility = Visibility.Collapsed;
         }
     }
 
-    private void SaveKeyAliasBtn_Click(object sender, RoutedEventArgs e)
+    private void SaveAliasIconBtn_Click(object sender, RoutedEventArgs e)
     {
         if (TrustedKeysGrid.SelectedItem is TrustedKeyEntry selected)
         {
@@ -816,10 +849,11 @@ public partial class MainWindow : Window
 
             MessageBox.Show($"Имя ключа обновлено на «{newName}».", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
         }
-        else
-        {
-            MessageBox.Show("Выберите ключ в таблице для переименования.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
+    }
+
+    private void CancelAliasIconBtn_Click(object sender, RoutedEventArgs e)
+    {
+        TrustedKeysGrid.SelectedItem = null;
     }
 
     // =========================================================================
