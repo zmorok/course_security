@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Margin="0,12,0,0">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="460"/>
+            <ColumnDefinition Width="480"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -17,10 +17,15 @@
 
                 <StackPanel Grid.Row="0" Margin="0,0,0,12">
                     <TextBlock Text="Проверяемое изображение QR-кода" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
-                    <WrapPanel>
-                        <Button Content="Загрузить изображение..." Style="{StaticResource PrimaryButton}" Click="LoadVerificationQr_Click" Margin="0,0,8,8"/>
-                        <Button Content="Взять сгенерированный" Style="{StaticResource SecondaryButton}" Click="UseCurrentGeneratedForVerify_Click" Margin="0,0,8,8"/>
-                    </WrapPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Загрузить изображение..." Style="{StaticResource PrimaryButton}" Click="LoadVerificationQr_Click" Height="36" Padding="6,0"/>
+                        <Button Grid.Column="2" Content="Взять сгенерированный QR" Style="{StaticResource SecondaryButton}" Click="UseCurrentGeneratedForVerify_Click" Height="36" Padding="6,0"/>
+                    </Grid>
                 </StackPanel>
 
                 <Border Grid.Row="1" BorderBrush="#E1E4E8" BorderThickness="1" Background="#FAFAFA" CornerRadius="4" Padding="12">
@@ -35,7 +40,140 @@
             <StackPanel>
                 <Border x:Name="StatusBadgeBorder" Style="{StaticResource CardBorder}" Background="#F6F8FA" BorderThickness="2" BorderBrush="#D0D7DE">
                     <StackPanel>
-                        <TextBlock Text="Статус верификации подлинности:" FontWeight="SemiBold" Foreground="#57606A"/>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Статус верификации подлинности:" FontWeight="SemiBold" Foreground="#57606A" VerticalAlignment="Center"/>
+                            <Border Width="16" Height="16" CornerRadius="8" Margin="8,0,0,0"
+                                    BorderThickness="1.5"
+                                    Cursor="Hand"
+                                    VerticalAlignment="Center"
+                                    ToolTipService.InitialShowDelay="0"
+                                    ToolTipService.BetweenShowDelay="0"
+                                    ToolTipService.ShowDuration="60000">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="BorderBrush" Value="#8C959F"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="BorderBrush" Value="#0969DA"/>
+                                                <Setter Property="Background" Value="#DDF4FF"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="i" FontFamily="Georgia" FontWeight="Bold" FontStyle="Italic" FontSize="11"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#8C959F"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Border}, Path=IsMouseOver}" Value="True">
+                                                    <Setter Property="Foreground" Value="#0969DA"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <Border.ToolTip>
+                                    <ToolTip Background="#FFFFFF" BorderBrush="#D0D7DE" BorderThickness="1" Padding="14,12" HasDropShadow="True">
+                                        <StackPanel Width="430">
+                                            <TextBlock Text="Статусы верификации подлинности" FontWeight="Bold" FontSize="14" Foreground="#1F2328" Margin="0,0,0,10"/>
+
+                                            <!-- 1. Valid -->
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Width="10" Height="10" Fill="#1A7F37" VerticalAlignment="Top" Margin="0,3,0,0"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="Подлинность подтверждена" FontWeight="SemiBold" Foreground="#1A7F37" FontSize="12"/>
+                                                    <TextBlock Text="Подпись математически верна, ключ издателя доверен, срок действия актуален." TextWrapping="Wrap" Foreground="#57606A" FontSize="11"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- 2. InvalidSignature -->
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Width="10" Height="10" Fill="#CF222E" VerticalAlignment="Top" Margin="0,3,0,0"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="Подпись неверна (данные изменены)" FontWeight="SemiBold" Foreground="#CF222E" FontSize="12"/>
+                                                    <TextBlock Text="Целостность нарушена: реквизиты документа модифицированы либо подпись сфальсифицирована." TextWrapping="Wrap" Foreground="#57606A" FontSize="11"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- 3. UnknownKey -->
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Width="10" Height="10" Fill="#9A6700" VerticalAlignment="Top" Margin="0,3,0,0"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="Ключ издателя не доверен" FontWeight="SemiBold" Foreground="#9A6700" FontSize="12"/>
+                                                    <TextBlock Text="Идентификатор ключа (kid) отсутствует в локальном реестре доверенных ключей." TextWrapping="Wrap" Foreground="#57606A" FontSize="11"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- 4. Expired -->
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Width="10" Height="10" Fill="#BC4C00" VerticalAlignment="Top" Margin="0,3,0,0"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="Срок действия истек" FontWeight="SemiBold" Foreground="#BC4C00" FontSize="12"/>
+                                                    <TextBlock Text="Криптографическая подпись верна, но дата окончания действия документа уже наступила." TextWrapping="Wrap" Foreground="#57606A" FontSize="11"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- 5. InvalidPayload -->
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Width="10" Height="10" Fill="#CF222E" VerticalAlignment="Top" Margin="0,3,0,0"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="Неверный формат контейнера" FontWeight="SemiBold" Foreground="#CF222E" FontSize="12"/>
+                                                    <TextBlock Text="Полезная нагрузка повреждена, не является валидным JSON или нарушена структура Base64Url." TextWrapping="Wrap" Foreground="#57606A" FontSize="11"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- 6. UnsupportedVersion / UnsupportedAlgorithm -->
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Width="10" Height="10" Fill="#9A6700" VerticalAlignment="Top" Margin="0,3,0,0"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="Несовместимый протокол" FontWeight="SemiBold" Foreground="#9A6700" FontSize="12"/>
+                                                    <TextBlock Text="Версия протокола (v != 1) или алгоритм подписи (alg != PS256) не поддерживаются." TextWrapping="Wrap" Foreground="#57606A" FontSize="11"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- 7. QrNotDecoded -->
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Width="10" Height="10" Fill="#8C959F" VerticalAlignment="Top" Margin="0,3,0,0"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="QR-код не распознан" FontWeight="SemiBold" Foreground="#57606A" FontSize="12"/>
+                                                    <TextBlock Text="Сканер не смог прочитать матрицу из-за размытия, шума или физических дефектов." TextWrapping="Wrap" Foreground="#57606A" FontSize="11"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </ToolTip>
+                                </Border.ToolTip>
+                            </Border>
+                        </StackPanel>
                         <TextBlock x:Name="VerificationStatusHeading" Text="Ожидание проверки" FontSize="20" FontWeight="Bold" Foreground="#24292F" Margin="0,6,0,8"/>
                         <TextBlock x:Name="VerificationMessageDetail" Text="Загрузите изображение QR-кода и нажмите кнопку проверки." TextWrapping="Wrap" FontSize="14" Foreground="#24292F"/>
                     </StackPanel>

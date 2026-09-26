@@ -64,6 +64,20 @@ public partial class VerificationTab : UserControl
     {
         if (_qrService is null) return;
 
+        if (_loadedVerificationQr is not null)
+        {
+            var confirmResult = MessageBox.Show(
+                "В области проверки уже загружен QR-код. Заменить его новым изображением из файла?",
+                "Подтверждение замены",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmResult != MessageBoxResult.Yes)
+            {
+                return;
+            }
+        }
+
         var dialog = new OpenFileDialog
         {
             Title = "Выберите изображение QR-кода для проверки",
@@ -93,6 +107,20 @@ public partial class VerificationTab : UserControl
             return;
         }
 
+        if (_loadedVerificationQr is not null)
+        {
+            var confirmResult = MessageBox.Show(
+                "В области проверки уже загружен QR-код. Заменить его текущим сгенерированным QR-кодом?",
+                "Подтверждение замены",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmResult != MessageBoxResult.Yes)
+            {
+                return;
+            }
+        }
+
         SetImageToVerify(current);
     }
 
@@ -102,7 +130,7 @@ public partial class VerificationTab : UserControl
 
         if (_loadedVerificationQr is null)
         {
-            MessageBox.Show("Загрузите изображение QR-кода или воспользуйтесь кнопкой «Взять сгенерированный».", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Загрузите изображение QR-кода или воспользуйтесь кнопкой «Взять сгенерированный QR».", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -186,6 +214,27 @@ public partial class VerificationTab : UserControl
                     Color.FromRgb(255, 232, 214),
                     Color.FromRgb(188, 76, 0),
                     Color.FromRgb(217, 108, 0)
+                );
+                break;
+
+            case VerificationStatus.InvalidPayload:
+                SetStatusBadge(
+                    "НЕВЕРНЫЙ ФОРМАТ КОНТЕЙНЕРА",
+                    result.Message,
+                    Color.FromRgb(255, 235, 233),
+                    Color.FromRgb(207, 34, 46),
+                    Color.FromRgb(207, 34, 46)
+                );
+                break;
+
+            case VerificationStatus.UnsupportedVersion:
+            case VerificationStatus.UnsupportedAlgorithm:
+                SetStatusBadge(
+                    "НЕСОВМЕСТИМЫЙ ПРОТОКОЛ",
+                    result.Message,
+                    Color.FromRgb(255, 248, 197),
+                    Color.FromRgb(154, 103, 0),
+                    Color.FromRgb(212, 167, 44)
                 );
                 break;
 
