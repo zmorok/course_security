@@ -14,12 +14,22 @@
                         <TextBlock Text="Ключи для формирования цифровой подписи" FontSize="16" FontWeight="Bold" Margin="0,0,0,12"/>
 
                         <TextBlock Text="Длина ключа RSA:" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                        <ComboBox x:Name="KeySizeCombo" SelectedIndex="0" Margin="0,0,0,12" Padding="6">
+                        <ComboBox x:Name="KeySizeCombo" SelectedIndex="0" Margin="0,0,0,10" Padding="6">
                             <ComboBoxItem Content="2048 бит (стандартный)"/>
                             <ComboBoxItem Content="3072 бит (повышенная стойкость)"/>
                         </ComboBox>
 
-                        <Button Content="Сгенерировать новую пару ключей" Style="{StaticResource PrimaryButton}" Click="GenerateNewKeyPair_Click" Margin="0,0,0,12"/>
+                        <Button Content="Сгенерировать пару" ToolTip="Сгенерировать новую ключевую пару RSA" Style="{StaticResource PrimaryButton}" Click="GenerateNewKeyPair_Click" Height="36" Margin="0,0,0,8"/>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="Импорт открытого ключа..." ToolTip="Загрузить открытый ключ из файла PEM в реестр доверенных" Style="{StaticResource SecondaryButton}" Click="ImportTrustedKeyFile_Click" Height="36" Padding="4,0"/>
+                            <Button Grid.Column="2" Content="Импорт закрытого ключа..." ToolTip="Загрузить существующий закрытый ключ из файла PEM" Style="{StaticResource SecondaryButton}" Click="ImportPrivateKey_Click" Height="36" Padding="4,0"/>
+                        </Grid>
 
                         <TextBlock Text="Издатель / Название ключа:" FontWeight="SemiBold" Margin="0,0,0,4"/>
                         <Grid Margin="0,0,0,10">
@@ -62,27 +72,16 @@
                         <TextBlock Text="Идентификатор текущего ключа (Key ID):" FontWeight="SemiBold"/>
                         <TextBox x:Name="CurrentKeyIdBox" IsReadOnly="True" Background="#F6F8FA" Padding="6" Margin="0,3,0,12"/>
 
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="8"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Content="Экспорт закрытого ключа" ToolTip="Сохранить закрытый ключ в файл PEM" Style="{StaticResource SecondaryButton}" Click="ExportPrivateKey_Click"/>
-                            <Button Grid.Column="2" Content="Экспорт открытого ключа" ToolTip="Сохранить открытый ключ в файл PEM" Style="{StaticResource SecondaryButton}" Click="ExportPublicKey_Click"/>
-                        </Grid>
-
-                        <Separator Margin="0,4,0,12"/>
-
-                        <TextBlock Text="Управление текущим ключом:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBlock Text="Экспорт ключей:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <Button Content="Экспортировать пару ключей (оба файла)..." ToolTip="Сохранить открытый и закрытый ключи в два отдельных файла PEM" Style="{StaticResource SecondaryButton}" Click="ExportKeyPair_Click" Height="32" Margin="0,0,0,6"/>
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="8"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Content="Импорт закрытого ключа" ToolTip="Загрузить закрытый ключ из файла PEM" Style="{StaticResource SecondaryButton}" Click="ImportPrivateKey_Click"/>
-                            <Button Grid.Column="2" Content="Добавить открытый в реестр" ToolTip="Добавить текущий открытый ключ в реестр доверенных" Style="{StaticResource SecondaryButton}" Click="AddCurrentKeyToTrusted_Click"/>
+                            <Button Grid.Column="0" Content="Экспорт открытого (.pem)" ToolTip="Сохранить только открытый ключ для передачи проверяющим" Style="{StaticResource SecondaryButton}" Click="ExportPublicKey_Click" Height="32"/>
+                            <Button Grid.Column="2" Content="Экспорт закрытого (.pem)" ToolTip="Сохранить только закрытый ключ для резервной копии" Style="{StaticResource SecondaryButton}" Click="ExportPrivateKey_Click" Height="32"/>
                         </Grid>
 
                         <!-- Предпросмотр ключей -->
@@ -101,7 +100,6 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0" Margin="0,0,0,10">
@@ -109,7 +107,7 @@
                     <TextBlock Text="Список открытых ключей, которым доверяет программа при проверке QR-кода. Выберите ключ из таблицы для просмотра." TextWrapping="Wrap" Foreground="#57606A"/>
                 </StackPanel>
 
-                <DataGrid Grid.Row="1" x:Name="TrustedKeysGrid" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" SelectionMode="Single" Margin="0,6,0,12" BorderThickness="1" BorderBrush="#D0D7DE" SelectionChanged="TrustedKeysGrid_SelectionChanged" MouseDoubleClick="TrustedKeysGrid_MouseDoubleClick">
+                <DataGrid Grid.Row="1" x:Name="TrustedKeysGrid" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" SelectionMode="Single" Margin="0,6,0,0" BorderThickness="1" BorderBrush="#D0D7DE" SelectionChanged="TrustedKeysGrid_SelectionChanged" MouseDoubleClick="TrustedKeysGrid_MouseDoubleClick">
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow">
                             <Style.Resources>
@@ -139,11 +137,6 @@
                         <DataGridTextColumn Header="Дата добавления" Binding="{Binding AddedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" Width="145"/>
                     </DataGrid.Columns>
                 </DataGrid>
-
-                <WrapPanel Grid.Row="2">
-                    <Button Content="Импортировать открытый ключ из файла..." Style="{StaticResource PrimaryButton}" Click="ImportTrustedKeyFile_Click"/>
-                    <Button Content="Использовать для цифровой подписи" Style="{StaticResource SecondaryButton}" Click="SetActiveSigningKeyBtn_Click" Margin="8,0,0,0" ToolTip="Выбрать этот ключ в качестве активного рабочего ключа для формирования подписи"/>
-                </WrapPanel>
             </Grid>
         </Border>
     </Grid>

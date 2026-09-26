@@ -96,11 +96,105 @@ public partial class KeyManagementTab : UserControl
         MessageBox.Show($"Новая пара ключей сгенерирована.\nИздатель: {alias}\nKey ID: {keyId}", "Ключи готовы", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
+    private (string keyId, string alias, string publicPem, string? privatePem) GetCurrentlyInspectedKey()
+    {
+        string keyId = CurrentKeyIdBox.Text.Trim();
+        string alias = KeyAliasInput.Text.Trim();
+        string publicPem = PublicKeyPreviewBox.Text;
+        string? privatePem = null;
+
+        if (TrustedKeysGrid.SelectedItem is TrustedKeyEntry selected)
+        {
+            keyId = selected.KeyId;
+            alias = selected.Name;
+            publicPem = selected.PublicPem;
+            if (_trustedKeys != null && _trustedKeys.TryGetPrivateKeyPem(selected.KeyId, out var priv))
+            {
+                privatePem = priv;
+            }
+        }
+        else
+        {
+            if (_trustedKeys != null && !string.IsNullOrEmpty(_currentWorkingKeyId) && _trustedKeys.TryGetPrivateKeyPem(_currentWorkingKeyId, out var priv))
+            {
+                privatePem = priv;
+            }
+            else if (_currentPrivateKey != null && _keyManager != null)
+            {
+                privatePem = _keyManager.ExportPrivatePem(_currentPrivateKey);
+            }
+        }
+
+        return (keyId, alias, publicPem, privatePem);
+    }
+
+    private void ExportKeyPair_Click(object sender, RoutedEventArgs e)
+    {
+        var keyInfo = GetCurrentlyInspectedKey();
+        if (string.IsNullOrEmpty(keyInfo.publicPem))
+        {
+            MessageBox.Show("Ключ не выбран или еще не сгенерирован.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (string.IsNullOrEmpty(keyInfo.privatePem))
+        {
+            var choice = MessageBox.Show(
+                $"Для ключа «{keyInfo.alias}» отсутствует закрытая часть (это внешний открытый ключ проверяющей стороны).\n\nЭкспортировать только открытый ключ?",
+                "Закрытый ключ отсутствует",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (choice == MessageBoxResult.Yes)
+            {
+                ExportPublicKey_Click(sender, e);
+            }
+            return;
+        }
+
+        var dialog = new SaveFileDialog
+        {
+            Title = "Выберите папку и имя для сохранения пары ключей",
+            Filter = "Файлы ключей PEM (*.pem)|*.pem|Все файлы (*.*)|*.*",
+            FileName = $"key_{keyInfo.keyId}"
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            try
+            {
+                string dir = Path.GetDirectoryName(dialog.FileName) ?? string.Empty;
+                string baseName = Path.GetFileNameWithoutExtension(dialog.FileName);
+
+                string pubPath = Path.Combine(dir, $"{baseName}_public.pem");
+                string privPath = Path.Combine(dir, $"{baseName}_private.pem");
+
+                File.WriteAllText(pubPath, keyInfo.publicPem);
+                File.WriteAllText(privPath, keyInfo.privatePem);
+
+                MessageBox.Show(
+                    $"Пара ключей успешно сохранена в двух файлах:\n\n• {Path.GetFileName(pubPath)} (открытый)\n• {Path.GetFileName(privPath)} (закрытый)",
+                    "Экспорт завершен",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка сохранения файлов: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
     private void ExportPrivateKey_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentPrivateKey is null || _keyManager is null)
+        var keyInfo = GetCurrentlyInspectedKey();
+        if (string.IsNullOrEmpty(keyInfo.privatePem))
         {
-            MessageBox.Show("Ключевая пара еще не создана.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(
+                $"Для выбранного ключа «{keyInfo.alias}» отсутствует закрытая часть.\nЭтот ключ является внешним открытым ключом проверяющей стороны и не может быть экспортирован как закрытый.",
+                "Закрытый ключ недоступен",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
             return;
         }
 
@@ -108,21 +202,29 @@ public partial class KeyManagementTab : UserControl
         {
             Title = "Сохранение закрытого ключа в файл",
             Filter = "Файл ключа PEM (*.pem)|*.pem|Все файлы (*.*)|*.*",
-            FileName = $"private_key_{CurrentKeyIdBox.Text}.pem"
+            FileName = $"private_key_{keyInfo.keyId}.pem"
         };
 
         if (dialog.ShowDialog() == true)
         {
-            _keyManager.SavePrivatePem(_currentPrivateKey, dialog.FileName);
-            MessageBox.Show("Закрытый ключ успешно сохранен в файл.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                File.WriteAllText(dialog.FileName, keyInfo.privatePem);
+                MessageBox.Show("Закрытый ключ успешно сохранен в файл.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка сохранения файла: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 
     private void ExportPublicKey_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentPrivateKey is null || _keyManager is null)
+        var keyInfo = GetCurrentlyInspectedKey();
+        if (string.IsNullOrEmpty(keyInfo.publicPem))
         {
-            MessageBox.Show("Ключевая пара еще не создана.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Ключ не выбран или еще не сгенерирован.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -130,13 +232,20 @@ public partial class KeyManagementTab : UserControl
         {
             Title = "Сохранение открытого ключа в файл",
             Filter = "Файл ключа PEM (*.pem)|*.pem|Все файлы (*.*)|*.*",
-            FileName = $"public_key_{CurrentKeyIdBox.Text}.pem"
+            FileName = $"public_key_{keyInfo.keyId}.pem"
         };
 
         if (dialog.ShowDialog() == true)
         {
-            _keyManager.SavePublicPem(_currentPrivateKey, dialog.FileName);
-            MessageBox.Show("Открытый ключ успешно сохранен в файл.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                File.WriteAllText(dialog.FileName, keyInfo.publicPem);
+                MessageBox.Show("Открытый ключ успешно сохранен в файл.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка сохранения файла: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 
@@ -187,27 +296,6 @@ public partial class KeyManagementTab : UserControl
         }
     }
 
-    private void AddCurrentKeyToTrusted_Click(object sender, RoutedEventArgs e)
-    {
-        if (_currentPrivateKey is null || _keyManager is null || _trustedKeys is null)
-        {
-            MessageBox.Show("Сначала создайте или загрузите ключ.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
-        string alias = string.IsNullOrWhiteSpace(KeyAliasInput.Text) ? "Текущий издатель" : KeyAliasInput.Text.Trim();
-        if (TrustedKeysGrid.SelectedItem is null)
-        {
-            _currentWorkingKeyAlias = alias;
-        }
-
-        var publicPem = _keyManager.ExportPublicPem(_currentPrivateKey);
-        _trustedKeys.AddPublicKey(publicPem, alias);
-        RefreshTrustedKeysGrid();
-        KeyStoreChanged?.Invoke();
-        MessageBox.Show($"Открытый ключ «{alias}» добавлен в список доверенных.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-    }
-
     private void ImportTrustedKeyFile_Click(object sender, RoutedEventArgs e)
     {
         if (_trustedKeys is null) return;
@@ -228,7 +316,7 @@ public partial class KeyManagementTab : UserControl
                 RefreshTrustedKeysGrid();
                 KeyStoreChanged?.Invoke();
 
-                PublicKeyPreviewBox.Text = pem;
+                TrustedKeysGrid.SelectedItem = _trustedKeyEntries.FirstOrDefault(k => string.Equals(k.KeyId, entry.KeyId, StringComparison.OrdinalIgnoreCase));
                 MessageBox.Show($"Открытый ключ добавлен в список доверенных.\nИмя: {entry.Name}\nKey ID: {entry.KeyId}", "Ключ добавлен", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -266,6 +354,16 @@ public partial class KeyManagementTab : UserControl
             string? nextWorkingId = null;
             if (string.Equals(selected.KeyId, _currentWorkingKeyId, StringComparison.OrdinalIgnoreCase))
             {
+                _currentPrivateKey?.Dispose();
+                _currentPrivateKey = null;
+                _currentWorkingKeyId = string.Empty;
+                _currentWorkingKeyAlias = string.Empty;
+
+                CurrentKeyIdBox.Text = string.Empty;
+                KeyAliasInput.Text = string.Empty;
+                PublicKeyPreviewBox.Text = string.Empty;
+                PrivateKeyPreviewBox.Text = string.Empty;
+
                 var remaining = _trustedKeys.GetAllEntries();
                 var nextWorking = remaining
                     .OrderByDescending(k => k.Id)
@@ -365,30 +463,6 @@ public partial class KeyManagementTab : UserControl
         TrustedKeysGrid.SelectedItem = null;
     }
 
-    private void SetActiveSigningKeyBtn_Click(object sender, RoutedEventArgs e)
-    {
-        if (_trustedKeys is null) return;
-
-        if (TrustedKeysGrid.SelectedItem is TrustedKeyEntry selected)
-        {
-            if (!_trustedKeys.TryGetPrivateKeyPem(selected.KeyId, out var privatePem) || string.IsNullOrEmpty(privatePem))
-            {
-                MessageBox.Show(
-                    $"Ключ «{selected.Name}» содержит только открытую часть (без закрытого ключа).\nОн используется проверяющей стороной для валидации, но не может создавать новые подписи.",
-                    "Недоступно для подписи",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
-
-            KeyActivated?.Invoke(selected.KeyId);
-            MessageBox.Show($"Ключ «{selected.Name}» (Key ID: {selected.KeyId}) выбран в качестве активного для создания подписей.", "Ключ активирован", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-        else
-        {
-            MessageBox.Show("Выберите ключ из таблицы доверенных ключей.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-    }
 
     private void TrustedKeysGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
