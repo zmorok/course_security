@@ -1,0 +1,106 @@
+<UserControl x:Class="QrAuthenticity.Tabs.ExperimentsTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="0,12,0,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="440"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <ScrollViewer Margin="0,0,12,0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Text="Исследование помехоустойчивости QR-кода" FontSize="16" FontWeight="Bold" Margin="0,0,0,6"/>
+                        <TextBlock Text="Оценка устойчивости распознавания QR-кода при различных физических и оптических искажениях." TextWrapping="Wrap" Foreground="#57606A" Margin="0,0,0,12"/>
+
+                        <TextBlock Text="Моделируемое искажение:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="DistortionTypeCombo" SelectedIndex="2" Margin="0,0,0,10" Padding="6" SelectionChanged="DistortionTypeCombo_SelectionChanged"/>
+
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="От:" FontWeight="SemiBold"/>
+                                <TextBox x:Name="ExpStartBox" Text="0" Padding="6" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="До:" FontWeight="SemiBold"/>
+                                <TextBox x:Name="ExpEndBox" Text="35" Padding="6" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Шаг:" FontWeight="SemiBold"/>
+                                <TextBox x:Name="ExpStepBox" Text="5" Padding="6" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Повторов на точку:" FontWeight="SemiBold"/>
+                                <TextBox x:Name="ExpAttemptsBox" Text="10" Padding="6" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Seed (воспроизводимость):" FontWeight="SemiBold"/>
+                                <TextBox x:Name="ExpSeedBox" Text="42" Padding="6" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Button x:Name="StartExperimentBtn" Content="Запустить серию экспериментов" Style="{StaticResource PrimaryButton}" Click="StartExperimentSeries_Click" Height="36" Margin="0,0,0,10"/>
+                        <ProgressBar x:Name="ExperimentProgressBar" Height="8" Minimum="0" Maximum="100" Margin="0,0,0,10" Visibility="Collapsed"/>
+                        <TextBlock x:Name="ExperimentStatusLabel" Text="Готов к проведению измерений." Foreground="#57606A" FontSize="11" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Text="Образец искажения QR-кода" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                        <Border BorderBrush="#E1E4E8" BorderThickness="1" Background="#FAFAFA" CornerRadius="4" Height="220" Padding="8">
+                            <Image x:Name="DistortedSamplePreview" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Column="1" Style="{StaticResource CardBorder}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Margin="0,0,0,8">
+                    <TextBlock Text="Таблица результатов испытаний" FontSize="16" FontWeight="Bold" Margin="0,0,2,0"/>
+                    <TextBlock Text="Вероятность распознавания P_decode и среднее время обработки." Foreground="#57606A"/>
+                </StackPanel>
+
+                <DataGrid Grid.Row="1" x:Name="ExperimentResultsGrid" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" BorderThickness="1" BorderBrush="#D0D7DE" Margin="0,6,0,12">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Искажение" Binding="{Binding Distortion}" Width="160"/>
+                        <DataGridTextColumn Header="Интенсивность" Binding="{Binding Intensity, StringFormat='{}{0:F1}'}" Width="110"/>
+                        <DataGridTextColumn Header="Попыток" Binding="{Binding Attempts}" Width="75"/>
+                        <DataGridTextColumn Header="Распознано" Binding="{Binding DecodeSuccesses}" Width="90"/>
+                        <DataGridTextColumn Header="P_decode" Binding="{Binding DecodeRate, StringFormat='{}{0:P1}'}" Width="90"/>
+                        <DataGridTextColumn Header="Время (мс)" Binding="{Binding AverageDecodeMilliseconds, StringFormat='{}{0:F1}'}" Width="85"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <WrapPanel Grid.Row="2">
+                    <Button Content="Экспорт таблицы в CSV..." Style="{StaticResource PrimaryButton}" Click="ExportCsv_Click" Margin="0,0,8,0"/>
+                    <Button Content="Очистить результаты" Style="{StaticResource SecondaryButton}" Click="ClearExperimentResults_Click"/>
+                </WrapPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
