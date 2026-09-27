@@ -29,6 +29,39 @@ public sealed class PayloadCanonicalizer
         writer.WriteStartObject();
         writer.WriteString("document", payload.Data.DocumentNumber.Trim());
         writer.WriteString("owner", payload.Data.Owner.Trim());
+        writer.WriteString("issued", payload.Data.Issued.ToString("dd.MM.yyyy"));
+        if (payload.Data.Expires is not null)
+            writer.WriteString("expires", payload.Data.Expires.Value.ToString("dd.MM.yyyy"));
+        else
+            writer.WriteNull("expires");
+        writer.WriteEndObject();
+        writer.WriteEndObject();
+        writer.Flush();
+        return buffer.WrittenSpan.ToArray();
+    }
+
+    /// <summary>
+    /// Формирует канонические байты в формате унаследованной версии (с датами yyyy-MM-dd)
+    /// для обратной совместимости при проверке ранее выпущенных QR-кодов.
+    /// </summary>
+    public byte[] CanonicalizeLegacy(UnsignedPayload payload)
+    {
+        payload.Data.Validate();
+        var buffer = new ArrayBufferWriter<byte>();
+        using var writer = new Utf8JsonWriter(buffer, new JsonWriterOptions
+        {
+            Indented = false,
+            SkipValidation = false,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        });
+        writer.WriteStartObject();
+        writer.WriteNumber("v", payload.Version);
+        writer.WriteString("alg", payload.Algorithm);
+        writer.WriteString("kid", payload.KeyId);
+        writer.WritePropertyName("data");
+        writer.WriteStartObject();
+        writer.WriteString("document", payload.Data.DocumentNumber.Trim());
+        writer.WriteString("owner", payload.Data.Owner.Trim());
         writer.WriteString("issued", payload.Data.Issued.ToString("yyyy-MM-dd"));
         if (payload.Data.Expires is not null)
             writer.WriteString("expires", payload.Data.Expires.Value.ToString("yyyy-MM-dd"));

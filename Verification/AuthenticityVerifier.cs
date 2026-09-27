@@ -131,14 +131,18 @@ public sealed class AuthenticityVerifier
 
             if (!_signatureService.Verify(canonicalBytes, signatureBytes, publicKey))
             {
-                return new VerificationResult(
-                    VerificationStatus.InvalidSignature,
-                    "Цифровая подпись недействительна! Целостность нарушена: данные документа были изменены или подпись сфальсифицирована.",
-                    payload,
-                    IsEncrypted: isEncrypted,
-                    DecryptedJson: jsonToVerify,
-                    RawPayload: rawPayload
-                );
+                var legacyBytes = _canonicalizer.CanonicalizeLegacy(unsigned);
+                if (!_signatureService.Verify(legacyBytes, signatureBytes, publicKey))
+                {
+                    return new VerificationResult(
+                        VerificationStatus.InvalidSignature,
+                        "Цифровая подпись недействительна! Целостность нарушена: данные документа были изменены или подпись сфальсифицирована.",
+                        payload,
+                        IsEncrypted: isEncrypted,
+                        DecryptedJson: jsonToVerify,
+                        RawPayload: rawPayload
+                    );
+                }
             }
 
             var currentDate = today ?? DateOnly.FromDateTime(DateTime.Today);

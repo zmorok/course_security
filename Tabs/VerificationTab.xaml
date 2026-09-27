@@ -3,12 +3,18 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Margin="0,12,0,0">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="480"/>
+            <ColumnDefinition Width="500"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Border Grid.Column="0" Style="{StaticResource CardBorder}" Margin="0,0,12,0">
-            <Grid>
+        <Grid Grid.Column="0" Margin="0,0,12,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto" MinWidth="{DynamicResource {x:Static SystemParameters.VerticalScrollBarWidthKey}}"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource CardBorder}" Margin="0">
+                <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -25,7 +31,7 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <RadioButton Grid.Column="0" x:Name="SourceImageRadio" Content="Изображение QR" IsChecked="True" GroupName="VerifySourceGroup" Height="32" Checked="VerifySourceRadio_Checked"/>
-                        <RadioButton Grid.Column="2" x:Name="SourceTextRadio" Content="Текст с телефона" GroupName="VerifySourceGroup" Height="32" Checked="VerifySourceRadio_Checked"/>
+                        <RadioButton Grid.Column="2" x:Name="SourceTextRadio" Content="Текстовые данные" GroupName="VerifySourceGroup" Height="32" Checked="VerifySourceRadio_Checked"/>
                     </Grid>
                 </StackPanel>
 
@@ -44,7 +50,7 @@
                                 <ColumnDefinition Width="8"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Content="Загрузить из файла..." Style="{StaticResource PrimaryButton}" Click="LoadVerificationQr_Click" Height="34" Padding="6,0"/>
+                            <Button Grid.Column="0" Content="Загрузить из файла" Style="{StaticResource PrimaryButton}" Click="LoadVerificationQr_Click" Height="34" Padding="6,0"/>
                             <Button Grid.Column="2" Content="Взять сгенерированный" Style="{StaticResource SecondaryButton}" Click="UseCurrentGeneratedForVerify_Click" Height="34" Padding="6,0"/>
                         </Grid>
 
@@ -53,19 +59,15 @@
                         </Border>
                     </Grid>
 
-                    <!-- Режим 2: Ручной ввод зашифрованного payload (с телефона) -->
+                    <!-- Режим 2: Ввод полезной нагрузки (текстовые данные) -->
                     <Grid x:Name="TextSourcePanel" Visibility="Collapsed">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <StackPanel Grid.Row="0" Margin="0,0,0,6">
-                            <TextBlock Text="Полезная нагрузка (шифротекст / JSON):" FontWeight="SemiBold" Margin="0,0,0,2"/>
-                            <TextBlock Text="Вставьте считанную строку (отсканированную камерой телефона):" FontSize="11" Foreground="#57606A"/>
-                        </StackPanel>
+                        <TextBlock Grid.Row="0" Text="Шифртекст из QR:" FontWeight="SemiBold" Margin="0,0,0,6"/>
 
                         <TextBox Grid.Row="1" x:Name="InputRawPayloadText"
                                  AcceptsReturn="True"
@@ -78,39 +80,38 @@
                                  BorderBrush="#D0D7DE"
                                  TextChanged="InputRawPayloadText_TextChanged"/>
 
-                        <WrapPanel Grid.Row="2" Margin="0,6,0,4">
-                            <Button Content="Вставить из буфера" Style="{StaticResource SecondaryButton}" Click="PastePayloadFromClipboard_Click" Margin="0,0,6,4" Padding="8,4"/>
-                            <Button Content="Взять текущий QR" Style="{StaticResource SecondaryButton}" Click="PasteCurrentGeneratedPayload_Click" Margin="0,0,6,4" Padding="8,4"/>
-                            <Button Content="Очистить" Style="{StaticResource SecondaryButton}" Click="ClearPayloadInput_Click" Margin="0,0,6,4" Padding="8,4"/>
-                        </WrapPanel>
-
-                        <TextBlock Grid.Row="3" x:Name="PayloadFormatStatusText" Text="Статус формата: поле пусто" FontSize="11" Foreground="#0969DA" Margin="0,2,0,0"/>
+                        <Grid Grid.Row="2" Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="Взять из текущего QR" Style="{StaticResource SecondaryButton}" Click="PasteCurrentGeneratedPayload_Click" Height="32"/>
+                            <Button Grid.Column="2" Content="Очистить поле ввода" Style="{StaticResource SecondaryButton}" Click="ClearPayloadInput_Click" Height="32"/>
+                        </Grid>
                     </Grid>
                 </Grid>
 
                 <!-- Нижняя панель: настройка ключа расшифрования и запуск проверки -->
                 <StackPanel Grid.Row="2" Margin="0,10,0,0">
-                    <Expander Header="Параметры расшифрования полезной нагрузки" Margin="0,0,0,8">
-                        <StackPanel Margin="0,6,0,0">
-                            <TextBlock Text="Симметричный мастер-ключ приложения:" FontWeight="SemiBold" Margin="0,0,0,2"/>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="8"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBox x:Name="DecryptionKeyInput" Text="QrAuthenticity-MasterKey-2026-Feistel" Padding="6,4" FontFamily="Consolas" FontSize="11"/>
-                                <Button Grid.Column="2" Content="Сброс" Style="{StaticResource SecondaryButton}" Click="ResetDecryptionKey_Click" Padding="8,4" ToolTip="Восстановить мастер-ключ по умолчанию"/>
-                            </Grid>
-                        </StackPanel>
-                    </Expander>
+                    <TextBlock Text="Симметричный ключ приложения:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="DecryptionKeyInput" Text="QrAuthenticity-MasterKey-2026-Feistel" Padding="6,4" FontFamily="Consolas" FontSize="11"/>
+                        <Button Grid.Column="2" Content="Сброс" Style="{StaticResource SecondaryButton}" Click="ResetDecryptionKey_Click" Padding="10,4" ToolTip="Восстановить ключ по умолчанию"/>
+                    </Grid>
 
                     <Button Content="Проверить цифровую подпись и расшифровать" Style="{StaticResource PrimaryButton}" Click="RunVerification_Click" Height="40" FontSize="13" FontWeight="Bold"/>
                 </StackPanel>
             </Grid>
         </Border>
+        </Grid>
 
-        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Column="1" Style="{StaticResource StableScrollViewer}">
             <StackPanel>
                 <Border x:Name="StatusBadgeBorder" Style="{StaticResource CardBorder}" Background="#F6F8FA" BorderThickness="2" BorderBrush="#D0D7DE">
                     <StackPanel>
@@ -302,7 +303,7 @@
                                 <ColumnDefinition Width="220"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Срок действия:" FontWeight="SemiBold" Foreground="#57606A"/>
+                            <TextBlock Text="Дата окончания:" FontWeight="SemiBold" Foreground="#57606A"/>
                             <TextBlock Grid.Column="1" x:Name="ResultExpires" Text="—"/>
                         </Grid>
 
@@ -311,7 +312,7 @@
                                 <ColumnDefinition Width="220"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Идентификатор ключа (Key ID):" FontWeight="SemiBold" Foreground="#57606A"/>
+                            <TextBlock Text="Идентификатор ключа:" FontWeight="SemiBold" Foreground="#57606A"/>
                             <TextBlock Grid.Column="1" x:Name="ResultKeyId" Text="—" FontFamily="Consolas"/>
                         </Grid>
 
@@ -324,7 +325,7 @@
                             <TextBlock Grid.Column="1" x:Name="ResultKeyTrustStatus" Text="—"/>
                         </Grid>
 
-                        <Grid Margin="0,0,0,8">
+                        <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="220"/>
                                 <ColumnDefinition Width="*"/>
@@ -332,25 +333,16 @@
                             <TextBlock Text="Алгоритм цифровой подписи:" FontWeight="SemiBold" Foreground="#57606A"/>
                             <TextBlock Grid.Column="1" x:Name="ResultAlgorithm" Text="—"/>
                         </Grid>
-
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="220"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="Защита полезной нагрузки:" FontWeight="SemiBold" Foreground="#57606A"/>
-                            <TextBlock Grid.Column="1" x:Name="ResultEncryptionStatus" Text="—" FontWeight="SemiBold"/>
-                        </Grid>
                     </StackPanel>
                 </Border>
 
                 <Border Style="{StaticResource CardBorder}">
                     <StackPanel>
-                        <Expander Header="Считанный контейнер QR-кода (то, что получено со сканера)" Margin="0,0,0,8">
+                        <Expander Header="Считанные данные" Margin="0,0,0,8">
                             <TextBox x:Name="RawPayloadPreviewText" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" Height="100" Margin="0,8,0,0" Padding="6" Background="#F6F8FA" FontFamily="Consolas" FontSize="11"/>
                         </Expander>
 
-                        <Expander Header="Расшифрованный канонический JSON документа">
+                        <Expander Header="Расшифрованные данные">
                             <TextBox x:Name="DecodedRawJsonText" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" Height="130" Margin="0,8,0,0" Padding="6" Background="#F6F8FA" FontFamily="Consolas" FontSize="11"/>
                         </Expander>
                     </StackPanel>

@@ -50,7 +50,18 @@ public partial class VerificationTab : UserControl
         ResetVerificationDisplay();
     }
 
-    private void ResetVerificationDisplay()
+    public void ResetToWaitingState()
+    {
+        VerificationStatusHeading.Text = "Ожидание проверки";
+        VerificationStatusHeading.Foreground = new SolidColorBrush(Color.FromRgb(36, 41, 47));
+        StatusBadgeBorder.Background = new SolidColorBrush(Color.FromRgb(246, 248, 250));
+        StatusBadgeBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(208, 215, 222));
+        VerificationMessageDetail.Text = "Загрузите изображение QR-кода или вставьте считанный текст и нажмите кнопку проверки.";
+
+        ClearExtractedFields();
+    }
+
+    public void ResetVerificationDisplay()
     {
         VerificationStatusHeading.Text = "Данные загружены";
         VerificationStatusHeading.Foreground = new SolidColorBrush(Color.FromRgb(36, 41, 47));
@@ -58,14 +69,19 @@ public partial class VerificationTab : UserControl
         StatusBadgeBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(208, 215, 222));
         VerificationMessageDetail.Text = "Нажмите «Проверить цифровую подпись и расшифровать» для запуска анализа.";
 
+        ClearExtractedFields();
+    }
+
+    private void ClearExtractedFields()
+    {
         ResultDocNumber.Text = "—";
         ResultOwner.Text = "—";
         ResultIssued.Text = "—";
         ResultExpires.Text = "—";
         ResultKeyId.Text = "—";
         ResultKeyTrustStatus.Text = "—";
+        ResultKeyTrustStatus.Foreground = new SolidColorBrush(Color.FromRgb(87, 96, 106));
         ResultAlgorithm.Text = "—";
-        ResultEncryptionStatus.Text = "—";
         RawPayloadPreviewText.Text = string.Empty;
         DecodedRawJsonText.Text = string.Empty;
     }
@@ -78,57 +94,40 @@ public partial class VerificationTab : UserControl
         {
             ImageSourcePanel.Visibility = Visibility.Visible;
             TextSourcePanel.Visibility = Visibility.Collapsed;
+            if (_loadedVerificationQr is not null)
+            {
+                ResetVerificationDisplay();
+            }
+            else
+            {
+                ResetToWaitingState();
+            }
         }
         else
         {
             ImageSourcePanel.Visibility = Visibility.Collapsed;
             TextSourcePanel.Visibility = Visibility.Visible;
+            if (!string.IsNullOrWhiteSpace(InputRawPayloadText?.Text))
+            {
+                ResetVerificationDisplay();
+            }
+            else
+            {
+                ResetToWaitingState();
+            }
         }
     }
 
     private void InputRawPayloadText_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (PayloadFormatStatusText is null) return;
-
         var text = InputRawPayloadText.Text.Trim();
         if (string.IsNullOrEmpty(text))
         {
-            PayloadFormatStatusText.Text = "Статус формата: поле пусто";
-            PayloadFormatStatusText.Foreground = new SolidColorBrush(Color.FromRgb(87, 96, 106));
-        }
-        else if (text.StartsWith("ENC1.", StringComparison.OrdinalIgnoreCase))
-        {
-            PayloadFormatStatusText.Text = $"Формат: Зашифрованный контейнер ENC1 ({text.Length} симв.) — Feistel-128-CBC";
-            PayloadFormatStatusText.Foreground = new SolidColorBrush(Color.FromRgb(26, 127, 55));
-        }
-        else if (text.StartsWith('{'))
-        {
-            PayloadFormatStatusText.Text = $"Формат: Открытый JSON ({text.Length} симв.) — без шифрования";
-            PayloadFormatStatusText.Foreground = new SolidColorBrush(Color.FromRgb(154, 103, 0));
+            ResetToWaitingState();
         }
         else
         {
-            PayloadFormatStatusText.Text = $"Формат: Произвольный текст ({text.Length} симв.)";
-            PayloadFormatStatusText.Foreground = new SolidColorBrush(Color.FromRgb(207, 34, 46));
-        }
-    }
-
-    private void PastePayloadFromClipboard_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            if (Clipboard.ContainsText())
-            {
-                InputRawPayloadText.Text = Clipboard.GetText().Trim();
-            }
-            else
-            {
-                MessageBox.Show("В буфере обмена нет текстовых данных.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Не удалось прочитать буфер обмена: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ResetVerificationDisplay();
         }
     }
 
@@ -147,7 +146,7 @@ public partial class VerificationTab : UserControl
     private void ClearPayloadInput_Click(object sender, RoutedEventArgs e)
     {
         InputRawPayloadText.Text = string.Empty;
-        ResetVerificationDisplay();
+        ResetToWaitingState();
     }
 
     private void ResetDecryptionKey_Click(object sender, RoutedEventArgs e)
@@ -267,23 +266,12 @@ public partial class VerificationTab : UserControl
 
         DecodedRawJsonText.Text = result.DecryptedJson ?? (result.IsEncrypted ? "(Не удалось расшифровать JSON)" : payloadToVerify);
 
-        if (result.IsEncrypted)
-        {
-            ResultEncryptionStatus.Text = "Зашифровано (Feistel-128-CBC)";
-            ResultEncryptionStatus.Foreground = new SolidColorBrush(Color.FromRgb(26, 127, 55));
-        }
-        else
-        {
-            ResultEncryptionStatus.Text = "Открытый контейнер (без шифрования)";
-            ResultEncryptionStatus.Foreground = new SolidColorBrush(Color.FromRgb(154, 103, 0));
-        }
-
         if (result.Payload is not null)
         {
             ResultDocNumber.Text = result.Payload.Data.DocumentNumber;
             ResultOwner.Text = result.Payload.Data.Owner;
-            ResultIssued.Text = result.Payload.Data.Issued.ToString("yyyy-MM-dd");
-            ResultExpires.Text = result.Payload.Data.Expires?.ToString("yyyy-MM-dd") ?? "Бессрочный";
+            ResultIssued.Text = result.Payload.Data.Issued.ToString("dd.MM.yyyy");
+            ResultExpires.Text = result.Payload.Data.Expires?.ToString("dd.MM.yyyy") ?? "Бессрочный";
             ResultKeyId.Text = result.Payload.KeyId;
 
             bool isTrusted = _trustedKeys.TryGet(result.Payload.KeyId, out var pubKey);
