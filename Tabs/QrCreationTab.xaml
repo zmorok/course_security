@@ -3,11 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Margin="0,12,0,0">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="460"/>
+            <ColumnDefinition Width="500"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,0,12,0">
+        <ScrollViewer Style="{StaticResource StableScrollViewer}" Margin="0,0,12,0">
             <StackPanel>
                 <Border Style="{StaticResource CardBorder}">
                     <StackPanel>
@@ -30,7 +30,7 @@
                                 <DatePicker x:Name="DocIssuedPicker" SelectedDateFormat="Short"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Срок действия (опц.):" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="Дата окончания:" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                 <DatePicker x:Name="DocExpiresPicker" SelectedDateFormat="Short"/>
                             </StackPanel>
                         </Grid>
@@ -43,10 +43,15 @@
                             <ComboBoxItem Content="H — Высокий (восстановление до ~30% повреждений)"/>
                         </ComboBox>
 
-                        <WrapPanel Margin="0,4,0,0">
-                            <Button Content="Сформировать и подписать QR" Style="{StaticResource PrimaryButton}" Click="CreateSignedQr_Click" Margin="0,0,8,8"/>
-                            <Button Content="Сохранить в PNG..." Style="{StaticResource SecondaryButton}" Click="SaveQrImage_Click" Margin="0,0,8,8"/>
-                        </WrapPanel>
+                        <Grid Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="Сформировать QR" Style="{StaticResource PrimaryButton}" Click="CreateSignedQr_Click" Height="36" ToolTip="Сформировать и подписать цифровой подписью QR-код"/>
+                            <Button Grid.Column="2" Content="Сохранить в PNG" Style="{StaticResource SecondaryButton}" Click="SaveQrImage_Click" Height="36" ToolTip="Сохранить изображение QR-кода в файл PNG"/>
+                        </Grid>
                     </StackPanel>
                 </Border>
 
@@ -61,10 +66,8 @@
 
                         <Separator Margin="0,4,0,8" Background="#E1E4E8"/>
 
-                        <CheckBox x:Name="EncryptPayloadCheckBox" Content="Шифровать полезную нагрузку (Feistel-128-CBC)" IsChecked="True" FontWeight="Bold" Margin="0,2,0,8" ToolTip="При включении QR-код будет содержать шифротекст ENC1, нечитаемый для сторонних сканеров" Checked="EncryptPayloadCheckBox_Changed" Unchecked="EncryptPayloadCheckBox_Changed"/>
-
                         <StackPanel x:Name="EncryptionKeyPanel" Margin="0,0,0,8">
-                            <TextBlock Text="Мастер-ключ шифрования приложения:" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                            <TextBlock Text="Симметричный ключ приложения:" FontWeight="SemiBold" Margin="0,0,0,3"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -76,14 +79,11 @@
                             </Grid>
                         </StackPanel>
 
-                        <Expander x:Name="CreationEncryptedExpander" Header="Зашифрованная строка QR (то, что видит телефон)" IsExpanded="False" Margin="0,4,0,4">
-                            <StackPanel Margin="0,6,0,0">
-                                <TextBox x:Name="CreationEncryptedPreview" IsReadOnly="True" TextWrapping="Wrap" Height="90" Padding="6" Background="#F6F8FA" FontFamily="Consolas" FontSize="10"/>
-                                <Button Content="Скопировать зашифрованный payload в буфер" Style="{StaticResource SecondaryButton}" Click="CopyEncryptedPayload_Click" Margin="0,6,0,0" Padding="6,4" HorizontalAlignment="Left"/>
-                            </StackPanel>
+                        <Expander x:Name="CreationEncryptedExpander" Header="Зашифрованные данные" IsExpanded="False" Margin="0,4,0,4">
+                            <TextBox x:Name="CreationEncryptedPreview" IsReadOnly="True" TextWrapping="Wrap" Height="90" Margin="0,6,0,0" Padding="6" Background="#F6F8FA" FontFamily="Consolas" FontSize="10"/>
                         </Expander>
 
-                        <Expander Header="Расшифрованный канонический JSON (внутри приложения)" Margin="0,4,0,0">
+                        <Expander Header="Расшифрованные данные" Margin="0,4,0,0">
                             <TextBox x:Name="CreationJsonPreview" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" Height="110" Margin="0,6,0,0" Padding="6" Background="#F6F8FA" FontFamily="Consolas" FontSize="10"/>
                         </Expander>
                     </StackPanel>
@@ -105,7 +105,7 @@
                     <Image x:Name="GeneratedQrImage" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                 </Border>
 
-                <TextBlock Grid.Row="2" x:Name="QrMetricsLabel" Text="QR-код еще не сгенерирован." Foreground="#57606A" Margin="0,10,0,0" HorizontalAlignment="Center"/>
+                <TextBlock Grid.Row="2" x:Name="QrMetricsLabel" Text="QR-код еще не сгенерирован." Foreground="#57606A" Margin="0,10,0,0" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
             </Grid>
         </Border>
     </Grid>

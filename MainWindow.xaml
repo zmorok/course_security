@@ -3,12 +3,17 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:tabs="clr-namespace:QrAuthenticity.Tabs"
         Title="Подтверждение подлинности данных в QR-кодах с использованием цифровой подписи"
-        Height="840" Width="1200" MinHeight="720" MinWidth="1000"
+        Height="840" Width="1200" MinHeight="720" MinWidth="1100"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI" FontSize="13" Background="#F6F8FA">
 
     <Grid Margin="12">
         <TabControl Background="Transparent" BorderThickness="0">
+            <TabControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </TabControl.ItemsPanel>
             <!-- Вкладка 1: Создание подписанного QR-кода -->
             <TabItem Header="1. Создание QR-кода">
                 <tabs:QrCreationTab x:Name="CreationTab"/>

@@ -114,31 +114,9 @@ public partial class QrCreationTab : UserControl
         }
     }
 
-    private void EncryptPayloadCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (EncryptionKeyPanel is not null)
-        {
-            EncryptionKeyPanel.Visibility = EncryptPayloadCheckBox.IsChecked == true
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-        }
-    }
-
     private void ResetCreationEncryptionKey_Click(object sender, RoutedEventArgs e)
     {
         CreationEncryptionKeyInput.Text = PayloadEncryptionService.DefaultMasterKey;
-    }
-
-    private void CopyEncryptedPayload_Click(object sender, RoutedEventArgs e)
-    {
-        if (string.IsNullOrEmpty(_currentQrEncodedPayload))
-        {
-            MessageBox.Show("Сначала сформируйте QR-код.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
-        Clipboard.SetText(_currentQrEncodedPayload);
-        MessageBox.Show("Зашифрованная строка QR-кода скопирована в буфер обмена!\nТеперь её можно вставить на вкладке «Верификация» для проверки.", "Скопировано", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void CreateSignedQr_Click(object sender, RoutedEventArgs e)
@@ -175,28 +153,18 @@ public partial class QrCreationTab : UserControl
             CreationJsonPreview.Text = _currentPayloadJson;
             UpdateAlgorithmDisplay();
 
-            bool isEncrypt = EncryptPayloadCheckBox.IsChecked == true;
-            if (isEncrypt)
-            {
-                string encKey = CreationEncryptionKeyInput.Text.Trim();
-                _currentQrEncodedPayload = _encryptionService.Encrypt(_currentPayloadJson, encKey);
-                CreationEncryptedPreview.Text = _currentQrEncodedPayload;
-                CreationEncryptedExpander.Header = $"Зашифрованный QR-payload ({_currentQrEncodedPayload.Length} симв., виден телефону)";
-            }
-            else
-            {
-                _currentQrEncodedPayload = _currentPayloadJson;
-                CreationEncryptedPreview.Text = "(Шифрование отключено. В QR-код помещен открытый JSON)";
-                CreationEncryptedExpander.Header = "Зашифрованная строка QR (шифрование выключено)";
-            }
+            string encKey = CreationEncryptionKeyInput.Text.Trim();
+            _currentQrEncodedPayload = _encryptionService.Encrypt(_currentPayloadJson, encKey);
+            CreationEncryptedPreview.Text = _currentQrEncodedPayload;
 
             var ecLevel = GetSelectedErrorCorrectionLevel();
             _currentGeneratedQr = _qrService.Generate(_currentQrEncodedPayload, pixels: 600, level: ecLevel);
             GeneratedQrImage.Source = _currentGeneratedQr;
 
             int payloadBytes = Encoding.UTF8.GetByteCount(_currentQrEncodedPayload);
-            string encLabel = isEncrypt ? "Зашифровано Feistel-128-CBC" : "Открытый JSON";
-            QrMetricsLabel.Text = $"Размер данных: {payloadBytes} байт ({encLabel}) | Коррекция Рида-Соломона: {ecLevel} | Разрешение: {_currentGeneratedQr.PixelWidth}x{_currentGeneratedQr.PixelHeight}";
+            string encLabel = "Зашифровано Feistel-128-CBC";
+            QrMetricsLabel.Text = $"Размер данных: {payloadBytes} байт | Коррекция Рида-Соломона: {ecLevel} | Разрешение: {_currentGeneratedQr.PixelWidth}×{_currentGeneratedQr.PixelHeight}";
+            QrMetricsLabel.ToolTip = $"Режим данных: {encLabel} ({payloadBytes} байт)\nКоррекция Рида-Соломона: {ecLevel}\nРазрешение растра: {_currentGeneratedQr.PixelWidth}×{_currentGeneratedQr.PixelHeight} px";
 
             QrCreated?.Invoke(_currentSignedPayload, _currentGeneratedQr, _currentQrEncodedPayload);
         }
