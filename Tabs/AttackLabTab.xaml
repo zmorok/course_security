@@ -7,16 +7,21 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <ScrollViewer Margin="0,0,12,0" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Style="{StaticResource StableScrollViewer}" Margin="0,0,12,0">
             <StackPanel>
                 <Border Style="{StaticResource CardBorder}">
                     <StackPanel>
                         <TextBlock Text="Моделирование атак на данные QR-кода" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
 
-                        <WrapPanel Margin="0,0,0,12">
-                            <Button Content="Загрузить изображение..." Style="{StaticResource SecondaryButton}" Click="TamperLoadImage_Click" Margin="0,0,8,8"/>
-                            <Button Content="Взять текущий документ" Style="{StaticResource SecondaryButton}" Click="TamperLoadCurrent_Click" Margin="0,0,8,8"/>
-                        </WrapPanel>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="Загрузить изображение QR" Style="{StaticResource SecondaryButton}" Click="TamperLoadImage_Click" Height="36"/>
+                            <Button Grid.Column="2" Content="Взять текущий QR" Style="{StaticResource SecondaryButton}" Click="TamperLoadCurrent_Click" Height="36"/>
+                        </Grid>
 
                         <Border BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,0,12" Background="#FAFAFA">
                             <StackPanel>
@@ -73,11 +78,9 @@
 
                                         <TextBlock x:Name="AttackerKeyIdDisplay" Text="Key ID атакующего: —" FontFamily="Consolas" FontSize="11" Foreground="#57606A" Margin="0,0,0,8"/>
 
-                                        <WrapPanel Margin="0,0,0,8">
-                                            <Button Content="Сгенерировать ключ злоумышленника" Style="{StaticResource SecondaryButton}" Click="GenerateAttackerKey_Click" Margin="0,0,6,0"/>
-                                        </WrapPanel>
+                                        <Button Content="Сгенерировать ключ злоумышленника" Style="{StaticResource SecondaryButton}" Click="GenerateAttackerKey_Click" Height="36" Margin="0,0,0,8"/>
 
-                                        <Button Content="Подтвердить и сформировать QR с чужим ключом" Style="{StaticResource DangerButton}" Click="ApplyAttack2_Click"/>
+                                        <Button Content="Подтвердить и сформировать QR с чужим ключом" Style="{StaticResource DangerButton}" Click="ApplyAttack2_Click" Height="36"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
@@ -106,8 +109,7 @@
 
                 <Border Grid.Row="3" Background="#FFFFFF" BorderBrush="#D0D7DE" BorderThickness="1" CornerRadius="4" Padding="14">
                     <StackPanel>
-                        <TextBlock Text="Заключение верификатора:" FontWeight="SemiBold" Foreground="#57606A"/>
-                        <TextBlock x:Name="TamperResultTitle" Text="Атака еще не запущена" FontSize="17" FontWeight="Bold" Foreground="#24292F" Margin="0,4,0,8"/>
+                        <TextBlock x:Name="TamperResultTitle" Text="Атака еще не запущена" FontSize="17" FontWeight="Bold" Foreground="#24292F" Margin="0,0,0,8"/>
                         <TextBlock x:Name="TamperResultDetails" Text="Отредактируйте реквизиты и нажмите одну из кнопок атаки." TextWrapping="Wrap" LineHeight="20"/>
                     </StackPanel>
                 </Border>
