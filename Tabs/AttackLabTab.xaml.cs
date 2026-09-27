@@ -20,6 +20,7 @@ public partial class AttackLabTab : UserControl
     private PayloadCodec? _codec;
     private QrCodeService? _qrService;
     private AuthenticityVerifier? _verifier;
+    private PayloadEncryptionService? _encryptionService;
 
     private BitmapSource? _tamperedQr;
     private SignedPayload? _originalPayloadForTamper;
@@ -37,13 +38,15 @@ public partial class AttackLabTab : UserControl
         PayloadCreationService creationService,
         PayloadCodec codec,
         QrCodeService qrService,
-        AuthenticityVerifier verifier)
+        AuthenticityVerifier verifier,
+        PayloadEncryptionService? encryptionService = null)
     {
         _keyManager = keyManager;
         _creationService = creationService;
         _codec = codec;
         _qrService = qrService;
         _verifier = verifier;
+        _encryptionService = encryptionService ?? new PayloadEncryptionService();
     }
 
     public void LoadCurrentDocument(SignedPayload? payload, BitmapSource? image)
@@ -94,7 +97,9 @@ public partial class AttackLabTab : UserControl
                     return;
                 }
 
-                _originalPayloadForTamper = _codec.Decode(text);
+                _encryptionService ??= new PayloadEncryptionService();
+                string json = _encryptionService.Decrypt(text);
+                _originalPayloadForTamper = _codec.Decode(json);
                 TamperDocNumber.Text = _originalPayloadForTamper.Data.DocumentNumber;
                 TamperOwner.Text = _originalPayloadForTamper.Data.Owner;
                 TamperIssuedPicker.SelectedDate = _originalPayloadForTamper.Data.Issued.ToDateTime(TimeOnly.MinValue);
@@ -165,7 +170,9 @@ public partial class AttackLabTab : UserControl
             );
 
             var tamperedJson = _codec.Encode(tamperedPayload);
-            _tamperedQr = _qrService.Generate(tamperedJson, pixels: 500, level: ErrorCorrectionLevel.Q);
+            _encryptionService ??= new PayloadEncryptionService();
+            var tamperedPayloadString = _encryptionService.Encrypt(tamperedJson);
+            _tamperedQr = _qrService.Generate(tamperedPayloadString, pixels: 500, level: ErrorCorrectionLevel.Q);
             TamperedQrPreview.Source = _tamperedQr;
 
             TamperResultTitle.Text = "Сформирован образ: Атака 1 (подмена данных)";
@@ -229,8 +236,10 @@ public partial class AttackLabTab : UserControl
             // АТАКА 2: Подписываем ключом злоумышленника
             var signedByAttacker = _creationService.Create(tamperedData, _attackerPrivateKey!);
             var tamperedJson = _codec.Encode(signedByAttacker);
+            _encryptionService ??= new PayloadEncryptionService();
+            var tamperedPayloadString = _encryptionService.Encrypt(tamperedJson);
 
-            _tamperedQr = _qrService.Generate(tamperedJson, pixels: 500, level: ErrorCorrectionLevel.Q);
+            _tamperedQr = _qrService.Generate(tamperedPayloadString, pixels: 500, level: ErrorCorrectionLevel.Q);
             TamperedQrPreview.Source = _tamperedQr;
 
             string keyName = string.IsNullOrWhiteSpace(AttackerKeyNameBox.Text) ? "Ключ злоумышленника" : AttackerKeyNameBox.Text.Trim();

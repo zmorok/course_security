@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     private readonly PayloadCanonicalizer _canonicalizer = new();
     private readonly PayloadCodec _codec = new();
     private readonly SignatureService _signatureService = new();
+    private readonly PayloadEncryptionService _encryptionService = new();
     private readonly PayloadCreationService _creationService;
     private readonly AuthenticityVerifier _verifier;
     private readonly QrCodeService _qrService = new();
@@ -31,8 +32,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        _creationService = new PayloadCreationService(_keyManager, _signatureService, _canonicalizer, _codec);
-        _verifier = new AuthenticityVerifier(_codec, _canonicalizer, _signatureService, _trustedKeys);
+        _creationService = new PayloadCreationService(_keyManager, _signatureService, _canonicalizer, _codec, _encryptionService);
+        _verifier = new AuthenticityVerifier(_codec, _canonicalizer, _signatureService, _trustedKeys, _encryptionService);
         _experimentRunner = new ExperimentRunner(_distortionService, _qrService, _verifier);
 
         InitializeTabs();
@@ -42,7 +43,7 @@ public partial class MainWindow : Window
     private void InitializeTabs()
     {
         // 1. Вкладка создания QR-кода
-        CreationTab.Initialize(_creationService, _codec, _qrService);
+        CreationTab.Initialize(_creationService, _codec, _qrService, _encryptionService);
         CreationTab.KeySelectionChanged += keyId => SwitchWorkingKey(keyId);
         CreationTab.QrCreated += (payload, image, json) =>
         {
@@ -52,9 +53,10 @@ public partial class MainWindow : Window
         // 2. Вкладка проверки подлинности
         VerificationTab.Initialize(_qrService, _verifier, _trustedKeys);
         VerificationTab.GetCurrentGeneratedQr = () => CreationTab.CurrentGeneratedQr;
+        VerificationTab.GetCurrentGeneratedPayload = () => CreationTab.CurrentQrEncodedPayload;
 
         // 3. Вкладка лаборатории атак
-        AttackLabTab.Initialize(_keyManager, _creationService, _codec, _qrService, _verifier);
+        AttackLabTab.Initialize(_keyManager, _creationService, _codec, _qrService, _verifier, _encryptionService);
         AttackLabTab.RequestCurrentPayload = () => (CreationTab.CurrentSignedPayload, CreationTab.CurrentGeneratedQr);
 
         // 4. Вкладка управления ключами

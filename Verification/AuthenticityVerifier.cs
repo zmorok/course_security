@@ -6,7 +6,8 @@ namespace QrAuthenticity.Verification;
 
 /// <summary>
 /// Сервис верификации подлинности и целостности данных QR-кода.
-/// Проверяет формат, доверие к открытому ключу издателя по Key ID,
+/// При необходимости производит расшифрование контейнера алгоритмом Feistel-128-CBC,
+/// затем проверяет формат, доверие к открытому ключу издателя по Key ID,
 /// математическую корректность подписи RSA-PSS над каноническими байтами и срок действия.
 /// </summary>
 public sealed class AuthenticityVerifier
@@ -15,34 +16,74 @@ public sealed class AuthenticityVerifier
     private readonly PayloadCanonicalizer _canonicalizer;
     private readonly SignatureService _signatureService;
     private readonly TrustedKeyStore _trustedKeys;
+    private readonly PayloadEncryptionService _encryptionService;
 
     public AuthenticityVerifier(
         PayloadCodec codec,
         PayloadCanonicalizer canonicalizer,
         SignatureService signatureService,
-        TrustedKeyStore trustedKeys)
+        TrustedKeyStore trustedKeys,
+        PayloadEncryptionService? encryptionService = null)
     {
         _codec = codec;
         _canonicalizer = canonicalizer;
         _signatureService = signatureService;
         _trustedKeys = trustedKeys;
+        _encryptionService = encryptionService ?? new PayloadEncryptionService();
     }
 
     /// <summary>
-    /// Выполняет полную проверку переданной строки полезной нагрузки (JSON).
+    /// Выполняет полную проверку переданной полезной нагрузки:
+    /// как зашифрованного контейнера (ENC1...), так и открытого JSON.
     /// </summary>
-    public VerificationResult Verify(string json, DateOnly? today = null)
+    public VerificationResult Verify(string rawPayload, string? decryptionKey = null, DateOnly? today = null)
     {
+        if (string.IsNullOrWhiteSpace(rawPayload))
+        {
+            return new VerificationResult(
+                VerificationStatus.InvalidPayload,
+                "Полезная нагрузка пуста.",
+                RawPayload: rawPayload
+            );
+        }
+
+        bool isEncrypted = _encryptionService.IsEncrypted(rawPayload);
+        string jsonToVerify;
+
+        if (isEncrypted)
+        {
+            try
+            {
+                jsonToVerify = _encryptionService.Decrypt(rawPayload, decryptionKey);
+            }
+            catch (Exception ex)
+            {
+                return new VerificationResult(
+                    VerificationStatus.DecryptionFailed,
+                    $"Ошибка расшифрования контейнера: {ex.Message}. Проверьте правильность симметричного ключа или целостность данных.",
+                    IsEncrypted: true,
+                    RawPayload: rawPayload
+                );
+            }
+        }
+        else
+        {
+            jsonToVerify = rawPayload;
+        }
+
         SignedPayload payload;
         try
         {
-            payload = _codec.Decode(json);
+            payload = _codec.Decode(jsonToVerify);
         }
         catch (Exception ex)
         {
             return new VerificationResult(
                 VerificationStatus.InvalidPayload,
-                $"Ошибка структуры контейнера данных: {ex.Message}"
+                $"Ошибка структуры контейнера данных: {ex.Message}",
+                IsEncrypted: isEncrypted,
+                DecryptedJson: jsonToVerify,
+                RawPayload: rawPayload
             );
         }
 
@@ -51,7 +92,10 @@ public sealed class AuthenticityVerifier
             return new VerificationResult(
                 VerificationStatus.UnsupportedVersion,
                 $"Неподдерживаемая версия протокола: {payload.Version}. Ожидается версия 1.",
-                payload
+                payload,
+                IsEncrypted: isEncrypted,
+                DecryptedJson: jsonToVerify,
+                RawPayload: rawPayload
             );
         }
 
@@ -60,7 +104,10 @@ public sealed class AuthenticityVerifier
             return new VerificationResult(
                 VerificationStatus.UnsupportedAlgorithm,
                 $"Неподдерживаемый криптографический алгоритм: {payload.Algorithm}.",
-                payload
+                payload,
+                IsEncrypted: isEncrypted,
+                DecryptedJson: jsonToVerify,
+                RawPayload: rawPayload
             );
         }
 
@@ -69,7 +116,10 @@ public sealed class AuthenticityVerifier
             return new VerificationResult(
                 VerificationStatus.UnknownKey,
                 $"Ключ издателя (Key ID: {payload.KeyId}) отсутствует в списке доверенных ключей.",
-                payload
+                payload,
+                IsEncrypted: isEncrypted,
+                DecryptedJson: jsonToVerify,
+                RawPayload: rawPayload
             );
         }
 
@@ -84,7 +134,10 @@ public sealed class AuthenticityVerifier
                 return new VerificationResult(
                     VerificationStatus.InvalidSignature,
                     "Цифровая подпись недействительна! Целостность нарушена: данные документа были изменены или подпись сфальсифицирована.",
-                    payload
+                    payload,
+                    IsEncrypted: isEncrypted,
+                    DecryptedJson: jsonToVerify,
+                    RawPayload: rawPayload
                 );
             }
 
@@ -94,14 +147,20 @@ public sealed class AuthenticityVerifier
                 return new VerificationResult(
                     VerificationStatus.Expired,
                     "Цифровая подпись математически верна, однако срок действия документа истек.",
-                    payload
+                    payload,
+                    IsEncrypted: isEncrypted,
+                    DecryptedJson: jsonToVerify,
+                    RawPayload: rawPayload
                 );
             }
 
             return new VerificationResult(
                 VerificationStatus.Valid,
                 "Подлинность и целостность подтверждены: цифровая подпись корректна, ключ издателя является доверенным.",
-                payload
+                payload,
+                IsEncrypted: isEncrypted,
+                DecryptedJson: jsonToVerify,
+                RawPayload: rawPayload
             );
         }
         catch (Exception ex)
@@ -109,7 +168,10 @@ public sealed class AuthenticityVerifier
             return new VerificationResult(
                 VerificationStatus.InvalidPayload,
                 $"Ошибка при обработке канонических данных или подписи: {ex.Message}",
-                payload
+                payload,
+                IsEncrypted: isEncrypted,
+                DecryptedJson: jsonToVerify,
+                RawPayload: rawPayload
             );
         }
     }

@@ -52,15 +52,39 @@
 
                 <Border Style="{StaticResource CardBorder}">
                     <StackPanel>
-                        <TextBlock Text="Параметры безопасности" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                        <TextBlock Text="Параметры безопасности и криптографии" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
                         <TextBlock Text="Ключ для цифровой подписи (Key ID):" FontWeight="SemiBold"/>
                         <ComboBox x:Name="CreationKeySelectCombo" DisplayMemberPath="DisplayText" SelectedValuePath="KeyId" Margin="0,3,0,8" Padding="6" ToolTip="Выберите созданный ключ для формирования цифровой подписи" SelectionChanged="CreationKeySelectCombo_SelectionChanged"/>
 
                         <TextBlock Text="Алгоритм цифровой подписи:" FontWeight="SemiBold"/>
                         <TextBlock x:Name="CreationAlgorithmDisplay" Text="SHA-256 (RSA 2048 бит)" Foreground="#0969DA" FontWeight="SemiBold" Margin="0,2,0,8" ToolTip="Алгоритм цифровой подписи RSA-PSS со схемой хеширования SHA-256"/>
 
-                        <Expander Header="Просмотреть канонический JSON контейнера" Margin="0,4,0,0">
-                            <TextBox x:Name="CreationJsonPreview" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" Height="140" Margin="0,8,0,0" Padding="6" Background="#F6F8FA" FontFamily="Consolas" FontSize="11"/>
+                        <Separator Margin="0,4,0,8" Background="#E1E4E8"/>
+
+                        <CheckBox x:Name="EncryptPayloadCheckBox" Content="Шифровать полезную нагрузку (Feistel-128-CBC)" IsChecked="True" FontWeight="Bold" Margin="0,2,0,8" ToolTip="При включении QR-код будет содержать шифротекст ENC1, нечитаемый для сторонних сканеров" Checked="EncryptPayloadCheckBox_Changed" Unchecked="EncryptPayloadCheckBox_Changed"/>
+
+                        <StackPanel x:Name="EncryptionKeyPanel" Margin="0,0,0,8">
+                            <TextBlock Text="Мастер-ключ шифрования приложения:" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="CreationEncryptionKeyInput" Text="QrAuthenticity-MasterKey-2026-Feistel" Padding="6,4" FontFamily="Consolas" FontSize="11"/>
+                                <Button Grid.Column="2" Content="Сброс" Style="{StaticResource SecondaryButton}" Click="ResetCreationEncryptionKey_Click" Padding="10,4" ToolTip="Восстановить ключ по умолчанию"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <Expander x:Name="CreationEncryptedExpander" Header="Зашифрованная строка QR (то, что видит телефон)" IsExpanded="False" Margin="0,4,0,4">
+                            <StackPanel Margin="0,6,0,0">
+                                <TextBox x:Name="CreationEncryptedPreview" IsReadOnly="True" TextWrapping="Wrap" Height="90" Padding="6" Background="#F6F8FA" FontFamily="Consolas" FontSize="10"/>
+                                <Button Content="Скопировать зашифрованный payload в буфер" Style="{StaticResource SecondaryButton}" Click="CopyEncryptedPayload_Click" Margin="0,6,0,0" Padding="6,4" HorizontalAlignment="Left"/>
+                            </StackPanel>
+                        </Expander>
+
+                        <Expander Header="Расшифрованный канонический JSON (внутри приложения)" Margin="0,4,0,0">
+                            <TextBox x:Name="CreationJsonPreview" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" Height="110" Margin="0,6,0,0" Padding="6" Background="#F6F8FA" FontFamily="Consolas" FontSize="10"/>
                         </Expander>
                     </StackPanel>
                 </Border>

@@ -72,17 +72,35 @@ public sealed class QrCodeService
         converted.CopyPixels(pixels, stride, 0);
 
         var luminance = new RGBLuminanceSource(pixels, converted.PixelWidth, converted.PixelHeight, RGBLuminanceSource.BitmapFormat.BGR24);
-        var bitmap = new BinaryBitmap(new HybridBinarizer(luminance));
+        var hints = new Dictionary<DecodeHintType, object>
+        {
+            [DecodeHintType.TRY_HARDER] = true,
+            [DecodeHintType.CHARACTER_SET] = "UTF-8"
+        };
         var reader = new QRCodeReader();
 
         try
         {
-            return reader.decode(bitmap)?.Text;
+            var bitmap = new BinaryBitmap(new HybridBinarizer(luminance));
+            var res = reader.decode(bitmap, hints);
+            if (res is not null) return res.Text;
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            var bitmap = new BinaryBitmap(new GlobalHistogramBinarizer(luminance));
+            var res = reader.decode(bitmap, hints);
+            if (res is not null) return res.Text;
         }
         catch
         {
             return null;
         }
+
+        return null;
     }
 
     /// <summary>

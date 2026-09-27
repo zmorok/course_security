@@ -15,24 +15,98 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0" Margin="0,0,0,12">
-                    <TextBlock Text="Проверяемое изображение QR-кода" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
-                    <Grid>
+                <!-- Выбор источника данных: Изображение QR или ручной ввод текста (с телефона) -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                    <TextBlock Text="Источник данных для проверки" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+                    <Grid Margin="0,0,0,6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="8"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Content="Загрузить изображение..." Style="{StaticResource PrimaryButton}" Click="LoadVerificationQr_Click" Height="36" Padding="6,0"/>
-                        <Button Grid.Column="2" Content="Взять сгенерированный QR" Style="{StaticResource SecondaryButton}" Click="UseCurrentGeneratedForVerify_Click" Height="36" Padding="6,0"/>
+                        <RadioButton Grid.Column="0" x:Name="SourceImageRadio" Content="Изображение QR" IsChecked="True" GroupName="VerifySourceGroup" Height="32" Checked="VerifySourceRadio_Checked"/>
+                        <RadioButton Grid.Column="2" x:Name="SourceTextRadio" Content="Текст с телефона" GroupName="VerifySourceGroup" Height="32" Checked="VerifySourceRadio_Checked"/>
                     </Grid>
                 </StackPanel>
 
-                <Border Grid.Row="1" BorderBrush="#E1E4E8" BorderThickness="1" Background="#FAFAFA" CornerRadius="4" Padding="12">
-                    <Image x:Name="VerificationQrImage" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                </Border>
+                <!-- Основная область: панель изображения или панель ручного ввода текста -->
+                <Grid Grid.Row="1">
+                    <!-- Режим 1: Изображение QR -->
+                    <Grid x:Name="ImageSourcePanel" Visibility="Visible">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                <Button Grid.Row="2" Content="Проверить цифровую подпись" Style="{StaticResource PrimaryButton}" Click="RunVerification_Click" Margin="0,14,0,0" Height="38"/>
+                        <Grid Grid.Row="0" Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="Загрузить из файла..." Style="{StaticResource PrimaryButton}" Click="LoadVerificationQr_Click" Height="34" Padding="6,0"/>
+                            <Button Grid.Column="2" Content="Взять сгенерированный" Style="{StaticResource SecondaryButton}" Click="UseCurrentGeneratedForVerify_Click" Height="34" Padding="6,0"/>
+                        </Grid>
+
+                        <Border Grid.Row="1" BorderBrush="#E1E4E8" BorderThickness="1" Background="#FAFAFA" CornerRadius="4" Padding="10">
+                            <Image x:Name="VerificationQrImage" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- Режим 2: Ручной ввод зашифрованного payload (с телефона) -->
+                    <Grid x:Name="TextSourcePanel" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Margin="0,0,0,6">
+                            <TextBlock Text="Полезная нагрузка (шифротекст / JSON):" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                            <TextBlock Text="Вставьте считанную строку (отсканированную камерой телефона):" FontSize="11" Foreground="#57606A"/>
+                        </StackPanel>
+
+                        <TextBox Grid.Row="1" x:Name="InputRawPayloadText"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 FontFamily="Consolas"
+                                 FontSize="11"
+                                 Padding="8"
+                                 Background="#FAFAFA"
+                                 BorderBrush="#D0D7DE"
+                                 TextChanged="InputRawPayloadText_TextChanged"/>
+
+                        <WrapPanel Grid.Row="2" Margin="0,6,0,4">
+                            <Button Content="Вставить из буфера" Style="{StaticResource SecondaryButton}" Click="PastePayloadFromClipboard_Click" Margin="0,0,6,4" Padding="8,4"/>
+                            <Button Content="Взять текущий QR" Style="{StaticResource SecondaryButton}" Click="PasteCurrentGeneratedPayload_Click" Margin="0,0,6,4" Padding="8,4"/>
+                            <Button Content="Очистить" Style="{StaticResource SecondaryButton}" Click="ClearPayloadInput_Click" Margin="0,0,6,4" Padding="8,4"/>
+                        </WrapPanel>
+
+                        <TextBlock Grid.Row="3" x:Name="PayloadFormatStatusText" Text="Статус формата: поле пусто" FontSize="11" Foreground="#0969DA" Margin="0,2,0,0"/>
+                    </Grid>
+                </Grid>
+
+                <!-- Нижняя панель: настройка ключа расшифрования и запуск проверки -->
+                <StackPanel Grid.Row="2" Margin="0,10,0,0">
+                    <Expander Header="Параметры расшифрования полезной нагрузки" Margin="0,0,0,8">
+                        <StackPanel Margin="0,6,0,0">
+                            <TextBlock Text="Симметричный мастер-ключ приложения:" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="DecryptionKeyInput" Text="QrAuthenticity-MasterKey-2026-Feistel" Padding="6,4" FontFamily="Consolas" FontSize="11"/>
+                                <Button Grid.Column="2" Content="Сброс" Style="{StaticResource SecondaryButton}" Click="ResetDecryptionKey_Click" Padding="8,4" ToolTip="Восстановить мастер-ключ по умолчанию"/>
+                            </Grid>
+                        </StackPanel>
+                    </Expander>
+
+                    <Button Content="Проверить цифровую подпись и расшифровать" Style="{StaticResource PrimaryButton}" Click="RunVerification_Click" Height="40" FontSize="13" FontWeight="Bold"/>
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -92,7 +166,20 @@
                                                 </StackPanel>
                                             </Grid>
 
-                                            <!-- 2. InvalidSignature -->
+                                            <!-- 2. DecryptionFailed -->
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Width="10" Height="10" Fill="#CF222E" VerticalAlignment="Top" Margin="0,3,0,0"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="Ошибка расшифрования" FontWeight="SemiBold" Foreground="#CF222E" FontSize="12"/>
+                                                    <TextBlock Text="Шифротекст поврежден или указан неверный симметричный мастер-ключ шифрования." TextWrapping="Wrap" Foreground="#57606A" FontSize="11"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- 3. InvalidSignature -->
                                             <Grid Margin="0,0,0,8">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="18"/>
@@ -105,7 +192,7 @@
                                                 </StackPanel>
                                             </Grid>
 
-                                            <!-- 3. UnknownKey -->
+                                            <!-- 4. UnknownKey -->
                                             <Grid Margin="0,0,0,8">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="18"/>
@@ -118,7 +205,7 @@
                                                 </StackPanel>
                                             </Grid>
 
-                                            <!-- 4. Expired -->
+                                            <!-- 5. Expired -->
                                             <Grid Margin="0,0,0,8">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="18"/>
@@ -131,7 +218,7 @@
                                                 </StackPanel>
                                             </Grid>
 
-                                            <!-- 5. InvalidPayload -->
+                                            <!-- 6. InvalidPayload -->
                                             <Grid Margin="0,0,0,8">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="18"/>
@@ -144,7 +231,7 @@
                                                 </StackPanel>
                                             </Grid>
 
-                                            <!-- 6. UnsupportedVersion / UnsupportedAlgorithm -->
+                                            <!-- 7. UnsupportedVersion / UnsupportedAlgorithm -->
                                             <Grid Margin="0,0,0,8">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="18"/>
@@ -157,7 +244,7 @@
                                                 </StackPanel>
                                             </Grid>
 
-                                            <!-- 7. QrNotDecoded -->
+                                            <!-- 8. QrNotDecoded -->
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="18"/>
@@ -175,7 +262,7 @@
                             </Border>
                         </StackPanel>
                         <TextBlock x:Name="VerificationStatusHeading" Text="Ожидание проверки" FontSize="20" FontWeight="Bold" Foreground="#24292F" Margin="0,6,0,8"/>
-                        <TextBlock x:Name="VerificationMessageDetail" Text="Загрузите изображение QR-кода и нажмите кнопку проверки." TextWrapping="Wrap" FontSize="14" Foreground="#24292F"/>
+                        <TextBlock x:Name="VerificationMessageDetail" Text="Загрузите изображение QR-кода или вставьте считанный текст и нажмите кнопку проверки." TextWrapping="Wrap" FontSize="14" Foreground="#24292F"/>
                     </StackPanel>
                 </Border>
 
@@ -245,13 +332,28 @@
                             <TextBlock Text="Алгоритм цифровой подписи:" FontWeight="SemiBold" Foreground="#57606A"/>
                             <TextBlock Grid.Column="1" x:Name="ResultAlgorithm" Text="—"/>
                         </Grid>
+
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="220"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Защита полезной нагрузки:" FontWeight="SemiBold" Foreground="#57606A"/>
+                            <TextBlock Grid.Column="1" x:Name="ResultEncryptionStatus" Text="—" FontWeight="SemiBold"/>
+                        </Grid>
                     </StackPanel>
                 </Border>
 
                 <Border Style="{StaticResource CardBorder}">
-                    <Expander Header="Исходный текст полезной нагрузки (JSON)">
-                        <TextBox x:Name="DecodedRawJsonText" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" Height="140" Margin="0,8,0,0" Padding="6" Background="#F6F8FA" FontFamily="Consolas" FontSize="11"/>
-                    </Expander>
+                    <StackPanel>
+                        <Expander Header="Считанный контейнер QR-кода (то, что получено со сканера)" Margin="0,0,0,8">
+                            <TextBox x:Name="RawPayloadPreviewText" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" Height="100" Margin="0,8,0,0" Padding="6" Background="#F6F8FA" FontFamily="Consolas" FontSize="11"/>
+                        </Expander>
+
+                        <Expander Header="Расшифрованный канонический JSON документа">
+                            <TextBox x:Name="DecodedRawJsonText" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" Height="130" Margin="0,8,0,0" Padding="6" Background="#F6F8FA" FontFamily="Consolas" FontSize="11"/>
+                        </Expander>
+                    </StackPanel>
                 </Border>
             </StackPanel>
         </ScrollViewer>

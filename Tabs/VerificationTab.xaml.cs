@@ -19,6 +19,7 @@ public partial class VerificationTab : UserControl
     private BitmapSource? _loadedVerificationQr;
 
     public Func<BitmapSource?>? GetCurrentGeneratedQr { get; set; }
+    public Func<string?>? GetCurrentGeneratedPayload { get; set; }
 
     public VerificationTab()
     {
@@ -42,13 +43,20 @@ public partial class VerificationTab : UserControl
         ResetVerificationDisplay();
     }
 
+    public void SetPayloadTextToVerify(string payload)
+    {
+        SourceTextRadio.IsChecked = true;
+        InputRawPayloadText.Text = payload;
+        ResetVerificationDisplay();
+    }
+
     private void ResetVerificationDisplay()
     {
-        VerificationStatusHeading.Text = "Изображение загружено";
+        VerificationStatusHeading.Text = "Данные загружены";
         VerificationStatusHeading.Foreground = new SolidColorBrush(Color.FromRgb(36, 41, 47));
         StatusBadgeBorder.Background = new SolidColorBrush(Color.FromRgb(246, 248, 250));
         StatusBadgeBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(208, 215, 222));
-        VerificationMessageDetail.Text = "Нажмите «Проверить цифровую подпись» для запуска анализа.";
+        VerificationMessageDetail.Text = "Нажмите «Проверить цифровую подпись и расшифровать» для запуска анализа.";
 
         ResultDocNumber.Text = "—";
         ResultOwner.Text = "—";
@@ -57,7 +65,94 @@ public partial class VerificationTab : UserControl
         ResultKeyId.Text = "—";
         ResultKeyTrustStatus.Text = "—";
         ResultAlgorithm.Text = "—";
+        ResultEncryptionStatus.Text = "—";
+        RawPayloadPreviewText.Text = string.Empty;
         DecodedRawJsonText.Text = string.Empty;
+    }
+
+    private void VerifySourceRadio_Checked(object sender, RoutedEventArgs e)
+    {
+        if (ImageSourcePanel is null || TextSourcePanel is null) return;
+
+        if (SourceImageRadio.IsChecked == true)
+        {
+            ImageSourcePanel.Visibility = Visibility.Visible;
+            TextSourcePanel.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            ImageSourcePanel.Visibility = Visibility.Collapsed;
+            TextSourcePanel.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void InputRawPayloadText_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (PayloadFormatStatusText is null) return;
+
+        var text = InputRawPayloadText.Text.Trim();
+        if (string.IsNullOrEmpty(text))
+        {
+            PayloadFormatStatusText.Text = "Статус формата: поле пусто";
+            PayloadFormatStatusText.Foreground = new SolidColorBrush(Color.FromRgb(87, 96, 106));
+        }
+        else if (text.StartsWith("ENC1.", StringComparison.OrdinalIgnoreCase))
+        {
+            PayloadFormatStatusText.Text = $"Формат: Зашифрованный контейнер ENC1 ({text.Length} симв.) — Feistel-128-CBC";
+            PayloadFormatStatusText.Foreground = new SolidColorBrush(Color.FromRgb(26, 127, 55));
+        }
+        else if (text.StartsWith('{'))
+        {
+            PayloadFormatStatusText.Text = $"Формат: Открытый JSON ({text.Length} симв.) — без шифрования";
+            PayloadFormatStatusText.Foreground = new SolidColorBrush(Color.FromRgb(154, 103, 0));
+        }
+        else
+        {
+            PayloadFormatStatusText.Text = $"Формат: Произвольный текст ({text.Length} симв.)";
+            PayloadFormatStatusText.Foreground = new SolidColorBrush(Color.FromRgb(207, 34, 46));
+        }
+    }
+
+    private void PastePayloadFromClipboard_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (Clipboard.ContainsText())
+            {
+                InputRawPayloadText.Text = Clipboard.GetText().Trim();
+            }
+            else
+            {
+                MessageBox.Show("В буфере обмена нет текстовых данных.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Не удалось прочитать буфер обмена: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void PasteCurrentGeneratedPayload_Click(object sender, RoutedEventArgs e)
+    {
+        var current = GetCurrentGeneratedPayload?.Invoke();
+        if (string.IsNullOrWhiteSpace(current))
+        {
+            MessageBox.Show("На вкладке создания QR-код еще не сгенерирован.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        InputRawPayloadText.Text = current;
+    }
+
+    private void ClearPayloadInput_Click(object sender, RoutedEventArgs e)
+    {
+        InputRawPayloadText.Text = string.Empty;
+        ResetVerificationDisplay();
+    }
+
+    private void ResetDecryptionKey_Click(object sender, RoutedEventArgs e)
+    {
+        DecryptionKeyInput.Text = PayloadEncryptionService.DefaultMasterKey;
     }
 
     private void LoadVerificationQr_Click(object sender, RoutedEventArgs e)
@@ -126,30 +221,62 @@ public partial class VerificationTab : UserControl
 
     private void RunVerification_Click(object sender, RoutedEventArgs e)
     {
-        if (_qrService is null || _verifier is null || _trustedKeys is null) return;
+        if (_verifier is null || _trustedKeys is null) return;
 
-        if (_loadedVerificationQr is null)
+        string payloadToVerify;
+
+        if (SourceImageRadio.IsChecked == true)
         {
-            MessageBox.Show("Загрузите изображение QR-кода или воспользуйтесь кнопкой «Взять сгенерированный QR».", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
+            if (_qrService is null) return;
+
+            if (_loadedVerificationQr is null)
+            {
+                MessageBox.Show("Загрузите изображение QR-кода или воспользуйтесь кнопкой «Взять сгенерированный».", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var decoded = _qrService.Decode(_loadedVerificationQr);
+            if (decoded is null)
+            {
+                SetStatusBadge(
+                    "QR-КОД НЕ РАСПОЗНАН",
+                    "Декодер не смог прочитать матрицу QR-кода. Возможно, изображение повреждено или сильно размыто.",
+                    Color.FromRgb(246, 248, 250),
+                    Color.FromRgb(87, 96, 106),
+                    Color.FromRgb(208, 215, 222)
+                );
+                return;
+            }
+
+            payloadToVerify = decoded;
+        }
+        else
+        {
+            payloadToVerify = InputRawPayloadText.Text.Trim();
+            if (string.IsNullOrWhiteSpace(payloadToVerify))
+            {
+                MessageBox.Show("Введите или вставьте в текстовое поле полезную нагрузку QR-кода (например, строку, отсканированную камерой смартфона).", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
         }
 
-        var decodedText = _qrService.Decode(_loadedVerificationQr);
+        RawPayloadPreviewText.Text = payloadToVerify;
 
-        if (decodedText is null)
+        string decKey = DecryptionKeyInput.Text.Trim();
+        var result = _verifier.Verify(payloadToVerify, decKey);
+
+        DecodedRawJsonText.Text = result.DecryptedJson ?? (result.IsEncrypted ? "(Не удалось расшифровать JSON)" : payloadToVerify);
+
+        if (result.IsEncrypted)
         {
-            SetStatusBadge(
-                "QR-КОД НЕ РАСПОЗНАН",
-                "Декодер не смог прочитать QR-код. Возможно, изображение повреждено или сильно размыто.",
-                Color.FromRgb(246, 248, 250),
-                Color.FromRgb(87, 96, 106),
-                Color.FromRgb(208, 215, 222)
-            );
-            return;
+            ResultEncryptionStatus.Text = "Зашифровано (Feistel-128-CBC)";
+            ResultEncryptionStatus.Foreground = new SolidColorBrush(Color.FromRgb(26, 127, 55));
         }
-
-        DecodedRawJsonText.Text = decodedText;
-        var result = _verifier.Verify(decodedText);
+        else
+        {
+            ResultEncryptionStatus.Text = "Открытый контейнер (без шифрования)";
+            ResultEncryptionStatus.Foreground = new SolidColorBrush(Color.FromRgb(154, 103, 0));
+        }
 
         if (result.Payload is not null)
         {
@@ -184,6 +311,16 @@ public partial class VerificationTab : UserControl
                     Color.FromRgb(223, 247, 228),
                     Color.FromRgb(26, 127, 55),
                     Color.FromRgb(45, 164, 78)
+                );
+                break;
+
+            case VerificationStatus.DecryptionFailed:
+                SetStatusBadge(
+                    "ОШИБКА РАСШИФРОВАНИЯ",
+                    result.Message,
+                    Color.FromRgb(255, 235, 233),
+                    Color.FromRgb(207, 34, 46),
+                    Color.FromRgb(207, 34, 46)
                 );
                 break;
 
