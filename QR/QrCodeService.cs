@@ -66,41 +66,106 @@ public sealed class QrCodeService
     /// </summary>
     public string? Decode(BitmapSource source)
     {
+        var text = TryDecodeInternal(source);
+        if (text is not null) return text;
+
+        // Попытка восстановления: добавление белой защитной зоны (Quiet Zone)
+        // на случай, если изображение было обрезано вплотную к матрице
+        try
+        {
+            var padded = AddQuietZone(source, 24);
+            return TryDecodeInternal(padded);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private string? TryDecodeInternal(BitmapSource source)
+    {
         var converted = new FormatConvertedBitmap(source, PixelFormats.Bgr24, null, 0);
         int stride = (converted.PixelWidth * converted.Format.BitsPerPixel + 7) / 8;
         var pixels = new byte[stride * converted.PixelHeight];
         converted.CopyPixels(pixels, stride, 0);
 
         var luminance = new RGBLuminanceSource(pixels, converted.PixelWidth, converted.PixelHeight, RGBLuminanceSource.BitmapFormat.BGR24);
-        var hints = new Dictionary<DecodeHintType, object>
+        var reader = new QRCodeReader();
+
+        // 1. Стандартный детектор с поиском угловых меток (для фото, поворотов, искажений)
+        var hintsDetector = new Dictionary<DecodeHintType, object>
         {
             [DecodeHintType.TRY_HARDER] = true,
             [DecodeHintType.CHARACTER_SET] = "UTF-8"
         };
-        var reader = new QRCodeReader();
 
         try
         {
             var bitmap = new BinaryBitmap(new HybridBinarizer(luminance));
-            var res = reader.decode(bitmap, hints);
-            if (res is not null) return res.Text;
+            var res = reader.decode(bitmap, hintsDetector);
+            if (res is not null && !string.IsNullOrEmpty(res.Text)) return res.Text;
         }
-        catch
-        {
-        }
+        catch { }
 
         try
         {
             var bitmap = new BinaryBitmap(new GlobalHistogramBinarizer(luminance));
-            var res = reader.decode(bitmap, hints);
-            if (res is not null) return res.Text;
+            var res = reader.decode(bitmap, hintsDetector);
+            if (res is not null && !string.IsNullOrEmpty(res.Text)) return res.Text;
         }
-        catch
+        catch { }
+
+        // 2. Режим PURE_BARCODE (для чистых цифровых изображений высокой плотности)
+        var hintsPure = new Dictionary<DecodeHintType, object>
         {
-            return null;
+            [DecodeHintType.PURE_BARCODE] = true,
+            [DecodeHintType.CHARACTER_SET] = "UTF-8"
+        };
+
+        try
+        {
+            var bitmap = new BinaryBitmap(new HybridBinarizer(luminance));
+            var res = reader.decode(bitmap, hintsPure);
+            if (res is not null && !string.IsNullOrEmpty(res.Text)) return res.Text;
         }
+        catch { }
+
+        try
+        {
+            var bitmap = new BinaryBitmap(new GlobalHistogramBinarizer(luminance));
+            var res = reader.decode(bitmap, hintsPure);
+            if (res is not null && !string.IsNullOrEmpty(res.Text)) return res.Text;
+        }
+        catch { }
 
         return null;
+    }
+
+    private static BitmapSource AddQuietZone(BitmapSource source, int margin)
+    {
+        var converted = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
+        int srcW = converted.PixelWidth;
+        int srcH = converted.PixelHeight;
+        int srcStride = srcW * 4;
+        var srcPixels = new byte[srcStride * srcH];
+        converted.CopyPixels(srcPixels, srcStride, 0);
+
+        int dstW = srcW + margin * 2;
+        int dstH = srcH + margin * 2;
+        int dstStride = dstW * 4;
+        var dstPixels = new byte[dstStride * dstH];
+        Array.Fill(dstPixels, (byte)255);
+
+        for (int y = 0; y < srcH; y++)
+        {
+            int srcOffset = y * srcStride;
+            int dstOffset = (y + margin) * dstStride + margin * 4;
+            Buffer.BlockCopy(srcPixels, srcOffset, dstPixels, dstOffset, srcStride);
+        }
+
+        var padded = BitmapSource.Create(dstW, dstH, 96, 96, PixelFormats.Bgra32, null, dstPixels, dstStride);
+        padded.Freeze();
+        return padded;
     }
 
     /// <summary>
