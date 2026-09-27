@@ -86,18 +86,18 @@ public partial class ExperimentsTab : UserControl
 
         if (!double.TryParse(ExpStartBox.Text, out double start) ||
             !double.TryParse(ExpEndBox.Text, out double end) ||
-            !double.TryParse(ExpStepBox.Text, out double step) ||
-            !int.TryParse(ExpAttemptsBox.Text, out int attempts) ||
-            !int.TryParse(ExpSeedBox.Text, out int seed))
+            !double.TryParse(ExpStepBox.Text, out double step))
         {
-            MessageBox.Show("Проверьте числовые параметры серии.", "Ошибка ввода", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("Проверьте числовые параметры диапазона (От, До, Шаг).", "Ошибка ввода", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
+
+        int attempts = int.TryParse(ExpAttemptsBox.Text, out int a) && a > 0 ? a : 10;
+        int seed = int.TryParse(ExpSeedBox.Text, out int s) ? s : 42;
 
         StartExperimentBtn.IsEnabled = false;
         ExperimentProgressBar.Visibility = Visibility.Visible;
         ExperimentProgressBar.Value = 0;
-        ExperimentStatusLabel.Text = "Выполняются измерения...";
 
         _experimentResults.Clear();
 
@@ -117,7 +117,6 @@ public partial class ExperimentsTab : UserControl
                     {
                         _experimentResults.Add(pointResult);
                         ExperimentProgressBar.Value = (double)stepIdx / totalSteps * 100.0;
-                        ExperimentStatusLabel.Text = $"Шаг: {stepIdx} из {totalSteps}. Интенсивность: {pointResult.Intensity} (P_decode: {pointResult.DecodeRate:P0})";
 
                         var sample = _distortionService.Apply(sourceImage, distortion, pointResult.Intensity, seed);
                         DistortedSamplePreview.Source = sample;
@@ -128,7 +127,6 @@ public partial class ExperimentsTab : UserControl
 
         StartExperimentBtn.IsEnabled = true;
         ExperimentProgressBar.Visibility = Visibility.Collapsed;
-        ExperimentStatusLabel.Text = $"Серия завершена. Записей: {_experimentResults.Count}. Можно выгрузить в CSV.";
     }
 
     private void ExportCsv_Click(object sender, RoutedEventArgs e)
@@ -165,6 +163,5 @@ public partial class ExperimentsTab : UserControl
     {
         _experimentResults.Clear();
         DistortedSamplePreview.Source = null;
-        ExperimentStatusLabel.Text = "Результаты очищены.";
     }
 }

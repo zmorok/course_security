@@ -3,21 +3,20 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Margin="0,12,0,0">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="440"/>
+            <ColumnDefinition Width="500"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <ScrollViewer Margin="0,0,12,0" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Style="{StaticResource StableScrollViewer}" Margin="0,0,12,0">
             <StackPanel>
                 <Border Style="{StaticResource CardBorder}">
                     <StackPanel>
-                        <TextBlock Text="Исследование помехоустойчивости QR-кода" FontSize="16" FontWeight="Bold" Margin="0,0,0,6"/>
-                        <TextBlock Text="Оценка устойчивости распознавания QR-кода при различных физических и оптических искажениях." TextWrapping="Wrap" Foreground="#57606A" Margin="0,0,0,12"/>
+                        <TextBlock Text="Исследование помехоустойчивости QR-кода" FontSize="16" FontWeight="Bold" Margin="0,0,0,12"/>
 
-                        <TextBlock Text="Моделируемое искажение:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBlock Text="Вид искажения:" FontWeight="SemiBold" Margin="0,0,0,4"/>
                         <ComboBox x:Name="DistortionTypeCombo" SelectedIndex="2" Margin="0,0,0,10" Padding="6" SelectionChanged="DistortionTypeCombo_SelectionChanged"/>
 
-                        <Grid Margin="0,0,0,8">
+                        <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="8"/>
@@ -27,37 +26,38 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="От:" FontWeight="SemiBold"/>
-                                <TextBox x:Name="ExpStartBox" Text="0" Padding="6" Margin="0,3,0,0"/>
+                                <TextBox x:Name="ExpStartBox" Text="0" Padding="6" Margin="0,3,0,0" ToolTip="Начальное значение интенсивности искажения"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="До:" FontWeight="SemiBold"/>
-                                <TextBox x:Name="ExpEndBox" Text="35" Padding="6" Margin="0,3,0,0"/>
+                                <TextBox x:Name="ExpEndBox" Text="35" Padding="6" Margin="0,3,0,0" ToolTip="Конечное значение интенсивности искажения"/>
                             </StackPanel>
                             <StackPanel Grid.Column="4">
                                 <TextBlock Text="Шаг:" FontWeight="SemiBold"/>
-                                <TextBox x:Name="ExpStepBox" Text="5" Padding="6" Margin="0,3,0,0"/>
+                                <TextBox x:Name="ExpStepBox" Text="5" Padding="6" Margin="0,3,0,0" ToolTip="Шаг изменения интенсивности"/>
                             </StackPanel>
                         </Grid>
 
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="12"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Повторов на точку:" FontWeight="SemiBold"/>
-                                <TextBox x:Name="ExpAttemptsBox" Text="10" Padding="6" Margin="0,3,0,0"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Seed (воспроизводимость):" FontWeight="SemiBold"/>
-                                <TextBox x:Name="ExpSeedBox" Text="42" Padding="6" Margin="0,3,0,0"/>
-                            </StackPanel>
-                        </Grid>
+                        <Expander Header="Дополнительные параметры" IsExpanded="False" Margin="0,0,0,12">
+                            <Grid Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Повторов на точку:" FontWeight="SemiBold" ToolTip="Сколько проверок проводить на каждом значении для расчета вероятности успеха (P_decode)"/>
+                                    <TextBox x:Name="ExpAttemptsBox" Text="10" Padding="6" Margin="0,3,0,0" ToolTip="Количество повторных попыток (по умолчанию 10)"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Seed (воспроизводимость):" FontWeight="SemiBold" ToolTip="Параметр генератора случайных чисел для повторяемости эксперимента"/>
+                                    <TextBox x:Name="ExpSeedBox" Text="42" Padding="6" Margin="0,3,0,0" ToolTip="Число для воспроизводимости стохастических помех (по умолчанию 42)"/>
+                                </StackPanel>
+                            </Grid>
+                        </Expander>
 
-                        <Button x:Name="StartExperimentBtn" Content="Запустить серию экспериментов" Style="{StaticResource PrimaryButton}" Click="StartExperimentSeries_Click" Height="36" Margin="0,0,0,10"/>
-                        <ProgressBar x:Name="ExperimentProgressBar" Height="8" Minimum="0" Maximum="100" Margin="0,0,0,10" Visibility="Collapsed"/>
-                        <TextBlock x:Name="ExperimentStatusLabel" Text="Готов к проведению измерений." Foreground="#57606A" FontSize="11" HorizontalAlignment="Center"/>
+                        <Button x:Name="StartExperimentBtn" Content="Запустить серию экспериментов" Style="{StaticResource PrimaryButton}" Click="StartExperimentSeries_Click" Height="36" Margin="0,0,0,0"/>
+                        <ProgressBar x:Name="ExperimentProgressBar" Height="8" Minimum="0" Maximum="100" Margin="0,8,0,0" Visibility="Collapsed"/>
                     </StackPanel>
                 </Border>
 
@@ -91,13 +91,17 @@
                         <DataGridTextColumn Header="Интенсивность" Binding="{Binding Intensity, StringFormat='{}{0:F1}'}" Width="110"/>
                         <DataGridTextColumn Header="Попыток" Binding="{Binding Attempts}" Width="75"/>
                         <DataGridTextColumn Header="Распознано" Binding="{Binding DecodeSuccesses}" Width="90"/>
-                        <DataGridTextColumn Header="P_decode" Binding="{Binding DecodeRate, StringFormat='{}{0:P1}'}" Width="90"/>
+                        <DataGridTextColumn Binding="{Binding DecodeRate, StringFormat='{}{0:P1}'}" Width="90">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="P_decode"/>
+                            </DataGridTextColumn.Header>
+                        </DataGridTextColumn>
                         <DataGridTextColumn Header="Время (мс)" Binding="{Binding AverageDecodeMilliseconds, StringFormat='{}{0:F1}'}" Width="85"/>
                     </DataGrid.Columns>
                 </DataGrid>
 
                 <WrapPanel Grid.Row="2">
-                    <Button Content="Экспорт таблицы в CSV..." Style="{StaticResource PrimaryButton}" Click="ExportCsv_Click" Margin="0,0,8,0"/>
+                    <Button Content="Экспорт таблицы в CSV" Style="{StaticResource PrimaryButton}" Click="ExportCsv_Click" Margin="0,0,8,0"/>
                     <Button Content="Очистить результаты" Style="{StaticResource SecondaryButton}" Click="ClearExperimentResults_Click"/>
                 </WrapPanel>
             </Grid>
