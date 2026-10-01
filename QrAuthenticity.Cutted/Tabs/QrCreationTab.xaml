@@ -1,0 +1,104 @@
+<UserControl x:Class="QrAuthenticity.Cutted.Tabs.QrCreationTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="0,12,0,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="500"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <ScrollViewer Style="{StaticResource StableScrollViewer}" Margin="0,0,12,0">
+            <StackPanel>
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Text="Реквизиты документа" FontSize="16" FontWeight="Bold" Foreground="#1F2328" Margin="0,0,0,12"/>
+
+                        <TextBlock Text="Номер документа:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBox x:Name="DocNumberInput" Text="DOC-2026-49328" Padding="8,6" Margin="0,0,0,10"/>
+
+                        <TextBlock Text="ФИО владельца документа:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBox x:Name="DocOwnerInput" Text="Иванов Иван Иванович" Padding="8,6" Margin="0,0,0,10"/>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Дата выдачи:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <DatePicker x:Name="DocIssuedPicker" SelectedDateFormat="Short"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Дата окончания:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <DatePicker x:Name="DocExpiresPicker" SelectedDateFormat="Short"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="Уровень коррекции ошибок Рида-Соломона:" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                        <ComboBox x:Name="ErrorCorrectionCombo" SelectedIndex="2" Margin="0,0,0,14" Padding="6">
+                            <ComboBoxItem Content="L — Низкий (восстановление до ~7% повреждений)"/>
+                            <ComboBoxItem Content="M — Средний (восстановление до ~15% повреждений)"/>
+                            <ComboBoxItem Content="Q — Повышенный (восстановление до ~25% повреждений)"/>
+                            <ComboBoxItem Content="H — Высокий (восстановление до ~30% повреждений)"/>
+                        </ComboBox>
+
+                        <Grid Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="Сформировать QR" Style="{StaticResource PrimaryButton}" Click="CreateQr_Click" Height="36" ToolTip="Зашифровать реквизиты и сформировать QR-код"/>
+                            <Button Grid.Column="2" Content="Сохранить в PNG" Style="{StaticResource SecondaryButton}" Click="SaveQrImage_Click" Height="36" ToolTip="Сохранить изображение QR-кода в файл PNG"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Text="Параметры безопасности и криптографии" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                        <StackPanel x:Name="EncryptionKeyPanel" Margin="0,0,0,8">
+                            <TextBlock Text="Симметричный ключ приложения:" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="CreationEncryptionKeyInput" Text="QrAuthenticity-MasterKey-2026-Feistel" Padding="6,4" FontFamily="Consolas" FontSize="11"/>
+                                <Button Grid.Column="2" Content="Сброс" Style="{StaticResource SecondaryButton}" Click="ResetCreationEncryptionKey_Click" Padding="10,4" ToolTip="Восстановить ключ по умолчанию"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <Expander x:Name="CreationEncryptedExpander" Header="Зашифрованные данные" IsExpanded="False" Margin="0,4,0,4">
+                            <TextBox x:Name="CreationEncryptedPreview" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="90" Margin="0,6,0,0" Padding="6" Background="#F6F8FA" FontFamily="Consolas" FontSize="10"/>
+                        </Expander>
+
+                        <Expander Header="Расшифрованные данные" Margin="0,4,0,0">
+                            <TextBox x:Name="CreationJsonPreview" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Height="110" Margin="0,6,0,0" Padding="6" Background="#F6F8FA" FontFamily="Consolas" FontSize="10"/>
+                        </Expander>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Column="1" Style="{StaticResource CardBorder}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Графический образ QR-кода" FontSize="16" FontWeight="Bold" Margin="0,0,0,12"/>
+
+                <Border Grid.Row="1" BorderBrush="#E1E4E8" BorderThickness="1" Background="#FAFAFA" CornerRadius="4" Padding="16">
+                    <Image x:Name="GeneratedQrImage" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                </Border>
+
+                <TextBlock Grid.Row="2" x:Name="QrMetricsLabel" Text="QR-код еще не сгенерирован." Foreground="#57606A" Margin="0,10,0,0" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,24 @@
+<Window x:Class="QrAuthenticity.Cutted.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:tabs="clr-namespace:QrAuthenticity.Cutted.Tabs"
+        Title="Создание и проверка QR-кодов — симметричное шифрование"
+        Height="840" Width="1200" MinHeight="720" MinWidth="1100"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI" FontSize="13" Background="#F6F8FA">
+    <Grid Margin="12">
+        <TabControl Background="Transparent" BorderThickness="0">
+            <TabControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </TabControl.ItemsPanel>
+            <TabItem Header="1. Создание QR-кода">
+                <tabs:QrCreationTab x:Name="CreationTab"/>
+            </TabItem>
+            <TabItem Header="2. Проверка QR-кода">
+                <tabs:QrReadingTab x:Name="ReadingTab"/>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
