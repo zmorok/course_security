@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <!-- Solution projects live one directory below the root. Keep this path relative:
+         absolute output paths containing an apostrophe can break MSBuild item transforms. -->
+    <BaseOutputPath>..\bin\$(MSBuildProjectName)\</BaseOutputPath>
+  </PropertyGroup>
+</Project>

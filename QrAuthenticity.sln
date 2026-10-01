@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.10.12201.205
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QrAuthenticity", "QrAuthenticity.csproj", "{9C555667-D5D0-4B9D-9C1B-B7DB3CC37949}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QrAuthenticity", "QrAuthenticity\QrAuthenticity.csproj", "{9C555667-D5D0-4B9D-9C1B-B7DB3CC37949}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QrAuthenticity.Cutted", "QrAuthenticity.Cutted\QrAuthenticity.Cutted.csproj", "{47FE5C44-68A0-49A3-AFA2-3BFA20B21A82}"
 EndProject

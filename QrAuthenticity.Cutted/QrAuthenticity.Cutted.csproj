@@ -12,11 +12,11 @@
     <PackageReference Include="ZXing.Net" Version="0.16.11" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="../Cryptography/FeistelCipher.cs" Link="Cryptography/FeistelCipher.cs" />
-    <Compile Include="../Cryptography/PayloadEncryptionService.cs" Link="Cryptography/PayloadEncryptionService.cs" />
-    <Compile Include="../Models/DocumentData.cs" Link="Models/DocumentData.cs" />
-    <Compile Include="../QR/QrCodeService.cs" Link="QR/QrCodeService.cs" />
-    <Compile Include="../Serialization/Base64Url.cs" Link="Serialization/Base64Url.cs" />
-    <Compile Include="../Serialization/RussianDateOnlyJsonConverter.cs" Link="Serialization/RussianDateOnlyJsonConverter.cs" />
+    <Compile Include="../QrAuthenticity/Cryptography/FeistelCipher.cs" Link="Cryptography/FeistelCipher.cs" />
+    <Compile Include="../QrAuthenticity/Cryptography/PayloadEncryptionService.cs" Link="Cryptography/PayloadEncryptionService.cs" />
+    <Compile Include="../QrAuthenticity/Models/DocumentData.cs" Link="Models/DocumentData.cs" />
+    <Compile Include="../QrAuthenticity/QR/QrCodeService.cs" Link="QR/QrCodeService.cs" />
+    <Compile Include="../QrAuthenticity/Serialization/Base64Url.cs" Link="Serialization/Base64Url.cs" />
+    <Compile Include="../QrAuthenticity/Serialization/RussianDateOnlyJsonConverter.cs" Link="Serialization/RussianDateOnlyJsonConverter.cs" />
   </ItemGroup>
 </Project>

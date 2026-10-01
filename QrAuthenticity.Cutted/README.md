@@ -33,6 +33,10 @@ dotnet test QrAuthenticity.Cutted.Tests/QrAuthenticity.Cutted.Tests.csproj
 
 В Visual Studio выберите `QrAuthenticity.Cutted` как запускаемый проект. Приложение имеет обычные конфигурации `Debug` и `Release`.
 
+Артефакты попадают в общий `bin` в корне решения. Исполняемый файл находится в
+`bin/QrAuthenticity.Cutted/Debug/net10.0-windows/QrAuthenticity.Cutted.exe` или в соответствующем каталоге `Release`.
+Тестовые сборки находятся отдельно: `bin/QrAuthenticity.Cutted.Tests/<конфигурация>/net10.0-windows/`.
+
 ## Общие исходные файлы
 
-В `.csproj` подключены как ссылки только `DocumentData`, `QrCodeService`, `FeistelCipher`, `PayloadEncryptionService`, `Base64Url` и конвертеры дат. Ссылки на сборку полного приложения нет: код RSA, цифровой подписи, доверенного хранилища, атак и экспериментов не включается в исполняемый файл Cutted.
+В `.csproj` подключены как ссылки только `DocumentData`, `QrCodeService`, `FeistelCipher`, `PayloadEncryptionService`, `Base64Url` и конвертеры дат из соседнего каталога `../QrAuthenticity/`. Ссылки на сборку полного приложения нет: код RSA, цифровой подписи, доверенного хранилища, атак и экспериментов не включается в исполняемый файл Cutted.

@@ -49,6 +49,33 @@
 
 ## 3. Структура проекта
 
+В корне репозитория находится решение, а каждый проект размещен в отдельном каталоге:
+
+```text
+QrAuthenticity.sln
+QrAuthenticity/
+    QrAuthenticity.csproj
+    App.xaml
+    MainWindow.xaml
+    Cryptography/
+    Models/
+    QR/
+    Serialization/
+    Services/
+    Tabs/
+    Verification/
+    Experiments/
+    docs/
+QrAuthenticity.Cutted/
+    QrAuthenticity.Cutted.csproj
+    ...
+QrAuthenticity.Cutted.Tests/
+    QrAuthenticity.Cutted.Tests.csproj
+    ...
+```
+
+Ниже перечислены классы полного приложения внутри каталога `QrAuthenticity/`.
+
 * `Cryptography/`
   * `KeyManager.cs` — генерация пар RSA-2048/3072, экспорт/импорт в PEM (PKCS#8 и SPKI), расчет Key ID.
   * `SignatureService.cs` — вычисление и проверка подписи RSA-PSS-SHA256.
@@ -98,13 +125,43 @@
 * Среда: .NET SDK (версия 10 или новее)
 
 ### Команды консоли:
+
+Файл `Directory.Build.props` задает общий каталог артефактов для проектов решения.
+Сборки разделены по имени проекта, конфигурации (`Debug`/`Release`) и целевой платформе .NET:
+
+```text
+bin/
+    QrAuthenticity/
+        Debug/net10.0-windows/QrAuthenticity.exe
+        Release/net10.0-windows/QrAuthenticity.exe
+    QrAuthenticity.Cutted/
+        Debug/net10.0-windows/QrAuthenticity.Cutted.exe
+        Release/net10.0-windows/QrAuthenticity.Cutted.exe
+    QrAuthenticity.Cutted.Tests/
+        Debug/net10.0-windows/QrAuthenticity.Cutted.Tests.dll
+        Release/net10.0-windows/QrAuthenticity.Cutted.Tests.dll
+```
+
+Папки `obj` с промежуточными файлами остаются внутри соответствующих проектов.
+Локальное хранилище ключей полного приложения располагается рядом с его `.exe`.
+Каталог `bin` исключен из Git через `.gitignore`.
+
 ```powershell
 # Сборка основного приложения
-dotnet build QrAuthenticity.csproj
+dotnet build QrAuthenticity/QrAuthenticity.csproj
 
 # Запуск приложения
-dotnet run --project QrAuthenticity.csproj
+dotnet run --project QrAuthenticity/QrAuthenticity.csproj
 
-# Запуск автоматических модульных тестов (27 тестов)
+# Запуск существующих тестов полного приложения
 dotnet test ../QrAuthenticity.Tests/QrAuthenticity.Tests.csproj
+
+# Сборка всего решения
+dotnet build QrAuthenticity.sln
+
+# Запуск урезанного приложения
+dotnet run --project QrAuthenticity.Cutted/QrAuthenticity.Cutted.csproj
+
+# Запуск тестов урезанного приложения
+dotnet test QrAuthenticity.Cutted.Tests/QrAuthenticity.Cutted.Tests.csproj
 ```
