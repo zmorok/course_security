@@ -1,4 +1,4 @@
-# Программное средство подтверждения подлинности данных в QR-кодах с использованием цифровой подписи
+# Программа подтверждения подлинности данных в QR-кодах
 
 Курсовой проект по дисциплине **«Защита информации и надежность информационных систем»**.
 
@@ -135,8 +135,8 @@ bin/
         Debug/net10.0-windows/QrAuthenticity.exe
         Release/net10.0-windows/QrAuthenticity.exe
     QrAuthenticity.Cutted/
-        Debug/net10.0-windows/QrAuthenticity.Cutted.exe
-        Release/net10.0-windows/QrAuthenticity.Cutted.exe
+        Debug/net10.0-windows/QrAuthenticity.exe
+        Release/net10.0-windows/QrAuthenticity.exe
     QrAuthenticity.Cutted.Tests/
         Debug/net10.0-windows/QrAuthenticity.Cutted.Tests.dll
         Release/net10.0-windows/QrAuthenticity.Cutted.Tests.dll
@@ -165,3 +165,29 @@ dotnet run --project QrAuthenticity.Cutted/QrAuthenticity.Cutted.csproj
 # Запуск тестов урезанного приложения
 dotnet test QrAuthenticity.Cutted.Tests/QrAuthenticity.Cutted.Tests.csproj
 ```
+
+Обе версии отображают название «Программа подтверждения подлинности данных в QR-кодах».
+Имена файлов приложения одинаковы: `QrAuthenticity.exe`, `QrAuthenticity.dll`,
+`QrAuthenticity.deps.json` и `QrAuthenticity.runtimeconfig.json`.
+
+Для выпуска урезанной версии в отдельную папку с постфиксом `cuted`:
+
+```powershell
+dotnet publish QrAuthenticity.Cutted/QrAuthenticity.Cutted.csproj -c Release -p:PublishProfile=Folder
+```
+
+Готовые файлы находятся в `bin/QrAuthenticity_cuted/`. Для переноса приложения
+нужно скопировать весь этот каталог. На компьютере для запуска требуется .NET Desktop Runtime 10.
+
+Для выпуска той же урезанной версии со встроенными .NET Runtime и WPF:
+
+```powershell
+dotnet publish QrAuthenticity.Cutted/QrAuthenticity.Cutted.csproj -c Release -p:PublishProfile=FolderSelfContained
+```
+
+Файлы находятся в `bin/QrAuthenticity_cuted_full/`. Передайте получателю весь этот каталог:
+`QrAuthenticity.exe` запускается на Windows x64 без установки .NET Desktop Runtime.
+
+В подготовленном архиве для передачи файлы приложения находятся в `app/`, а в корне расположен
+`Программа подтверждения подлинности данных в QR-кодах.cmd`. После распаковки запускайте этот файл:
+он открывает `app/QrAuthenticity.exe` по относительному пути и работает при переносе всей папки.

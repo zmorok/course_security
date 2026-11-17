@@ -1,4 +1,4 @@
-# QrAuthenticity.Cutted
+# Программа подтверждения подлинности данных в QR-кодах
 
 Отдельное WPF-приложение в решении `QrAuthenticity.sln` для создания и чтения зашифрованных QR-кодов.
 
@@ -34,8 +34,39 @@ dotnet test QrAuthenticity.Cutted.Tests/QrAuthenticity.Cutted.Tests.csproj
 В Visual Studio выберите `QrAuthenticity.Cutted` как запускаемый проект. Приложение имеет обычные конфигурации `Debug` и `Release`.
 
 Артефакты попадают в общий `bin` в корне решения. Исполняемый файл находится в
-`bin/QrAuthenticity.Cutted/Debug/net10.0-windows/QrAuthenticity.Cutted.exe` или в соответствующем каталоге `Release`.
+`bin/QrAuthenticity.Cutted/Debug/net10.0-windows/QrAuthenticity.exe` или в соответствующем каталоге `Release`.
 Тестовые сборки находятся отдельно: `bin/QrAuthenticity.Cutted.Tests/<конфигурация>/net10.0-windows/`.
+
+Название окна и продукта совпадает с полной версией:
+«Программа подтверждения подлинности данных в QR-кодах». Имя сборки – `QrAuthenticity`.
+Проект и пространства имен сохраняют обозначение `Cutted`, чтобы различать исходный код двух версий.
+
+Для получения готового Release-билда из каталога решения выполните:
+
+```powershell
+dotnet publish QrAuthenticity.Cutted/QrAuthenticity.Cutted.csproj -c Release -p:PublishProfile=Folder
+```
+
+Профиль `Properties/PublishProfiles/Folder.pubxml` помещает файлы в `bin/QrAuthenticity_cuted/`.
+Внутри находятся `QrAuthenticity.exe`, `QrAuthenticity.dll`, `QrAuthenticity.deps.json`,
+`QrAuthenticity.runtimeconfig.json` и зависимости без постфикса `Cutted`.
+Для переноса скопируйте весь каталог. На компьютере для запуска требуется .NET Desktop Runtime 10.
+
+Для передачи приложения вместе со средой выполнения .NET используйте отдельный профиль:
+
+```powershell
+dotnet publish QrAuthenticity.Cutted/QrAuthenticity.Cutted.csproj -c Release -p:PublishProfile=FolderSelfContained
+```
+
+Готовый каталог – `bin/QrAuthenticity_cuted_full/`. Это та же урезанная версия для Windows x64,
+со встроенными .NET Runtime и WPF. Устанавливать .NET Desktop Runtime на компьютере получателя
+не требуется. Скопируйте весь каталог и запустите `QrAuthenticity.exe`.
+Имена файлов приложения не содержат `cuted` или `Cutted`; отладочные символы в этот выпуск не включаются.
+
+В подготовленном архиве для передачи все файлы приложения размещены во внутреннем каталоге `app/`.
+Рядом с ним находится `Программа подтверждения подлинности данных в QR-кодах.cmd` – файл запуска
+с относительным путем к `app/QrAuthenticity.exe`. Распакуйте архив целиком и откройте этот `.cmd`.
+Папку можно переносить в другое место; пересборка приложения для такой упаковки не требуется.
 
 ## Общие исходные файлы
 
