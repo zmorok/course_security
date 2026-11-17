@@ -6,7 +6,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>QrAuthenticity.Cutted</RootNamespace>
-    <AssemblyName>QrAuthenticity.Cutted</AssemblyName>
+    <AssemblyName>QrAuthenticity</AssemblyName>
+    <AssemblyTitle>Программа подтверждения подлинности данных в QR-кодах</AssemblyTitle>
+    <Product>Программа подтверждения подлинности данных в QR-кодах</Product>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ZXing.Net" Version="0.16.11" />
