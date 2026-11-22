@@ -1,0 +1,60 @@
+<Project>
+  <PropertyGroup>
+    <IsStandaloneAppProject>true</IsStandaloneAppProject>
+    <Configurations>Debug;Release;Debug-Standalone;Release-Standalone;Debug-SingleFile;Release-SingleFile</Configurations>
+    <!-- Pre-declare win-x64 in the NuGet restore graph so switching between standard and standalone configs
+         works immediately without NETSDK1047 missing-RID errors. -->
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <!-- Common self-contained settings for Standalone and SingleFile configurations -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug-Standalone' or '$(Configuration)' == 'Release-Standalone' or '$(Configuration)' == 'Debug-SingleFile' or '$(Configuration)' == 'Release-SingleFile'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishTrimmed>false</PublishTrimmed>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+  </PropertyGroup>
+
+  <!-- Debug-like settings for Debug-Standalone and Debug-SingleFile -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug-Standalone' or '$(Configuration)' == 'Debug-SingleFile'">
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <!-- Release-like settings for Release-Standalone and Release-SingleFile -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release-Standalone' or '$(Configuration)' == 'Release-SingleFile'">
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
+    <AllowedReferenceRelatedFileExtensions>none</AllowedReferenceRelatedFileExtensions>
+  </PropertyGroup>
+
+  <!-- Standalone (multi-file): bin/<Project>/<Configuration>/app/ + Запустить программу.cmd -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug-Standalone'">
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="('$(Configuration)' == 'Debug-Standalone' or '$(Configuration)' == 'Release-Standalone') and !$(MSBuildProjectName.EndsWith('_wpftmp'))">
+    <StandalonePackageDir>..\bin\$(MSBuildProjectName)\$(Configuration)\</StandalonePackageDir>
+    <OutputPath>$(StandalonePackageDir)app\</OutputPath>
+    <PublishDir>$(StandalonePackageDir)app\</PublishDir>
+  </PropertyGroup>
+
+  <!-- SingleFile: stage intermediate Build in obj/, auto-publish single .exe into bin/<Project>/<Configuration>/ -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug-SingleFile' or '$(Configuration)' == 'Release-SingleFile'">
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug-SingleFile'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="('$(Configuration)' == 'Debug-SingleFile' or '$(Configuration)' == 'Release-SingleFile') and !$(MSBuildProjectName.EndsWith('_wpftmp'))">
+    <SingleFileFinalDir>..\bin\$(MSBuildProjectName)\$(Configuration)\</SingleFileFinalDir>
+    <OutputPath>$(BaseIntermediateOutputPath)singlefile-stage\$(Configuration)\</OutputPath>
+    <PublishDir>$(SingleFileFinalDir)</PublishDir>
+  </PropertyGroup>
+</Project>

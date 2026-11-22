@@ -1,0 +1,35 @@
+<Project>
+  <Target Name="CreateStandaloneLauncher"
+          AfterTargets="Build;Publish"
+          Condition="'$(IsStandaloneAppProject)' == 'true' and ('$(Configuration)' == 'Debug-Standalone' or '$(Configuration)' == 'Release-Standalone') and !$(MSBuildProjectName.EndsWith('_wpftmp')) and '$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <_StandaloneLauncherPath>$(StandalonePackageDir)Запустить программу.cmd</_StandaloneLauncherPath>
+    </PropertyGroup>
+    <ItemGroup>
+      <_StandaloneLauncherLines Include="@echo off" />
+      <_StandaloneLauncherLines Include="start &quot;&quot; /D &quot;%25~dp0app&quot; &quot;%25~dp0app\$(AssemblyName).exe&quot;" />
+    </ItemGroup>
+    <MakeDir Directories="$(StandalonePackageDir)" />
+    <WriteLinesToFile File="$(_StandaloneLauncherPath)"
+                      Lines="@(_StandaloneLauncherLines)"
+                      Overwrite="true"
+                      Encoding="ASCII" />
+  </Target>
+
+  <Target Name="PublishSingleFileAfterBuild"
+          AfterTargets="Build"
+          Condition="'$(IsStandaloneAppProject)' == 'true' and ('$(Configuration)' == 'Debug-SingleFile' or '$(Configuration)' == 'Release-SingleFile') and !$(MSBuildProjectName.EndsWith('_wpftmp')) and '$(DesignTimeBuild)' != 'true' and '$(SkipSingleFileAfterBuild)' != 'true' and '$(_IsPublishing)' != 'true'">
+    <MSBuild Projects="$(MSBuildProjectFullPath)"
+             Targets="Publish"
+             Properties="Configuration=$(Configuration);Platform=$(Platform);NoBuild=true;SkipSingleFileAfterBuild=true;BuildProjectReferences=false" />
+  </Target>
+
+  <Target Name="CleanStandaloneArtifacts"
+          AfterTargets="Clean"
+          Condition="'$(IsStandaloneAppProject)' == 'true' and !$(MSBuildProjectName.EndsWith('_wpftmp')) and '$(DesignTimeBuild)' != 'true'">
+    <Delete Files="$(StandalonePackageDir)Запустить программу.cmd"
+            Condition="'$(Configuration)' == 'Debug-Standalone' or '$(Configuration)' == 'Release-Standalone'" />
+    <RemoveDir Directories="$(SingleFileFinalDir)"
+               Condition="'$(Configuration)' == 'Debug-SingleFile' or '$(Configuration)' == 'Release-SingleFile'" />
+  </Target>
+</Project>
