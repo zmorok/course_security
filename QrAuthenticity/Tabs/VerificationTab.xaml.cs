@@ -222,6 +222,8 @@ public partial class VerificationTab : UserControl
     {
         if (_verifier is null || _trustedKeys is null) return;
 
+        ClearExtractedFields();
+
         string payloadToVerify;
 
         if (SourceImageRadio.IsChecked == true)
