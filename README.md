@@ -66,6 +66,9 @@ QrAuthenticity/
     Verification/
     Experiments/
     docs/
+QrAuthenticity.Tests/
+    QrAuthenticity.Tests.csproj
+    ...
 QrAuthenticity.Cutted/
     QrAuthenticity.Cutted.csproj
     ...
@@ -134,6 +137,9 @@ bin/
     QrAuthenticity/
         Debug/net10.0-windows/QrAuthenticity.exe
         Release/net10.0-windows/QrAuthenticity.exe
+    QrAuthenticity.Tests/
+        Debug/net10.0-windows/QrAuthenticity.Tests.dll
+        Release/net10.0-windows/QrAuthenticity.Tests.dll
     QrAuthenticity.Cutted/
         Debug/net10.0-windows/QrAuthenticity.exe
         Release/net10.0-windows/QrAuthenticity.exe
@@ -153,11 +159,14 @@ dotnet build QrAuthenticity/QrAuthenticity.csproj
 # Запуск приложения
 dotnet run --project QrAuthenticity/QrAuthenticity.csproj
 
-# Запуск существующих тестов полного приложения
-dotnet test ../QrAuthenticity.Tests/QrAuthenticity.Tests.csproj
+# Запуск тестов полного приложения
+dotnet test QrAuthenticity.Tests/QrAuthenticity.Tests.csproj
 
 # Сборка всего решения
 dotnet build QrAuthenticity.sln
+
+# Запуск всех тестов решения (полное и урезанное приложения)
+dotnet test QrAuthenticity.sln
 
 # Запуск урезанного приложения
 dotnet run --project QrAuthenticity.Cutted/QrAuthenticity.Cutted.csproj
