@@ -1,0 +1,760 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Алгоритм Рида-Соломона как важная составляющая QR-кодов - SciUp.org</title>
+<meta content="В данной статье затрагивается вопрос роли алгоритма Рида-Соломона в генерации QR-кодов. Описываются уровни коррекции ошибок и этапы создания QR-кода." name="description">
+<meta content="qr-код, алгоритм рида-соломона, уровни коррекции ошибок, этапы создания qr-кода" name="keywords">
+<link href="/static/css/global.css" rel="stylesheet" type="text/css">
+<link rel="alternate" hreflang="ru" href="https://sciup.org/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960" />
+<link rel="alternate" hreflang="en" href="https://sciup.org/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960?lang=en" />
+<link rel="canonical" href="https://sciup.org/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960" />
+
+	<meta name="citation_title" content="Алгоритм Рида-Соломона как важная составляющая QR-кодов" >
+                <meta name="citation_author" content="Бекезина Кристина Михайловна" >
+                <meta name="citation_author" content="Иванова Наталья Александровна" >
+      	<meta name="citation_abstract" content="В данной статье затрагивается вопрос роли алгоритма Рида-Соломона в генерации QR-кодов. Описываются уровни коррекции ошибок и этапы создания QR-кода." >
+	<meta name="citation_keywords" content="qr-код, алгоритм рида-соломона, уровни коррекции ошибок, этапы создания qr-кода" >
+
+	<meta name="citation_publication_date" content="2016/10/30">
+
+	<meta name="citation_journal_title" content="Вестник образовательного консорциума Среднерусский университет. Информационные технологии">
+	<meta name="citation_issn" content="2409-0883">
+		<meta name="citation_issue" content="2">
+	<meta name="citation_publisher" content="Брянский институт управления и бизнеса">
+	<meta name="citation_firstpage" content="29">
+	<meta name="citation_lastpage" content="31">
+	<meta name="citation_language" content="ru">
+	<meta name="citation_pdf_url" content="https://sciup.org/file/140129960/1795814.pdf">
+	<meta name="citation_abstract_html_url" content="https://sciup.org/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960">
+	<meta name="citation_fulltext_html_url" content="https://sciup.org/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960">
+<meta property="og:url" content="https://sciup.org/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960">
+<meta property="og:site_name" content="Платформа публикаций SciUp.org">
+<meta property="og:title" content="Алгоритм Рида-Соломона как важная составляющая QR-кодов">
+<meta property="og:description" content="В данной статье затрагивается вопрос роли алгоритма Рида-Соломона в генерации QR-кодов. Описываются уровни коррекции ошибок и этапы создания QR-кода.">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://sciup.org/file/picture/140129960/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov.png">
+<meta property="og:image:width" content="580">
+<meta property="og:image:height" content="820">
+
+
+
+<link href='/static/lib/imgareaselect-default.css' rel='stylesheet' type='text/css' />
+<script src='/static/lib/jquery-1.7.2.min.js'></script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+        {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "SciUp",
+                    "item": "https://sciup.org"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Научные статьи",
+                    "item": "https://sciup.org/udk"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 3,
+                    "name": "Общие вопросы науки и культуры",
+                    "item": "https://sciup.org/udk/obshtie-voprosyy-nauki-i-kulxturyy"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 4,
+                    "name": "Информационные технологии. Вычислительная техника. Обработка данных",
+                    "item": "https://sciup.org/udk/informacionnyye-tehnologii-vyychislitelxnaq-tehnika-obrabotka-dannyyh"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 5,
+                    "name": "Программные средства",
+                    "item": "https://sciup.org/udk/programmnyye-sredstva"
+                }
+            ]
+        },
+        {
+            "@type": "ScholarlyArticle",
+            "headline": "Алгоритм Рида-Соломона как важная составляющая QR-кодов",
+            "name": "Алгоритм Рида-Соломона как важная составляющая QR-кодов",
+            "url": "https://sciup.org/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960",
+            "description": "В данной статье затрагивается вопрос роли алгоритма Рида-Соломона в генерации QR-кодов. Описываются уровни коррекции ошибок и этапы создания QR-кода.",
+            "inLanguage": "ru",
+            "datePublished": "2016-10-30",
+            "author": [
+                {
+                    "@type": "Person",
+                    "name": "Бекезина Кристина Михайловна"
+                },
+                {
+                    "@type": "Person",
+                    "name": "Иванова Наталья Александровна"
+                }
+            ],
+            "image": {
+                "@type": "ImageObject",
+                "url": "https://sciup.org/file/picture/140129960/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov.png",
+                "caption": "Алгоритм Рида-Соломона как важная составляющая QR-кодов",
+                "width": 580,
+                "height": 820,
+                "thumbnail": {
+                    "@type": "ImageObject",
+                    "url": "https://sciup.org/file/cover/140129960/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov.png",
+                    "width": 202,
+                    "height": 286
+                }
+            },
+            "keywords": "qr-код, алгоритм рида-соломона, уровни коррекции ошибок, этапы создания qr-кода",
+            "isPartOf": {
+                "@type": "PublicationIssue",
+                "name": "Вестник образовательного консорциума Среднерусский университет. Информационные технологии",
+                "issueNumber": "2 (8)",
+                "datePublished": "2016-10-30",
+                "isPartOf": {
+                    "@type": "Periodical",
+                    "name": "Вестник образовательного консорциума Среднерусский университет. Информационные технологии",
+                    "issn": "2409-0883"
+                }
+            },
+            "publisher": {
+                "@type": "Organization",
+                "name": "Вестник образовательного консорциума Среднерусский университет. Информационные технологии",
+                "url": "https://sciup.org/vestnik-university"
+            }
+        }
+    ]
+}  </script>
+</head>
+<body class="lang-ru">
+
+
+
+<div id="wrapper">
+
+
+
+    <!-- Шапка начало -->        
+    <div id="header">
+		<div id="header_content">
+	<a class="logo" href="/" alt="На главную SciUp">
+		<img alt="SciUp" src="/static/images/logo.png">
+	</a>
+	<div class="cabinet-menu">
+	<a class="sprite s_menu_main_ico" href="#"> </a>
+	<div class="cabinet-menu_w">  
+	  <div class="cabinet-menu_w2 cabinet-menu_arrow">
+			 <ul class="cabinet-menu_section __reg">
+				<li class="cabinet-menu_reg"></li>
+								   				   <li><a href="/auth/login?url=%2Falgoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960">Войти</a></li>
+								<li><a href="/registration">Регистрация</a></li>
+			</ul>
+			<div class="cabinet-menu_border"></div>
+			
+			 <ul class="cabinet-menu_section __catalogs">
+				<li class="cabinet-menu_catalogs-lh"></li>
+				<li><a href="/udk">Научные статьи</a></li>
+				<li><a href="/journals">Журналы</a></li>
+				<li><a href="/publishers">Издательства</a></li>
+			</ul>
+		</div>
+	</div>
+</div>
+	<form id="search" action="/search" method="get">
+		<input type="text" value="" placeholder="Поиск" name="q">
+		<span class="search_button_pos"><button class="sprite s_search_button_icon" type="submit"></button></span>
+	</form>
+	<div class="subscriptions">
+		<a href="/subscriptions" onClick="user_nologin('subscriptions', window.location.pathname); return false;">Подписки</a>
+    </div>
+	<div class="sign-box">
+		<div class="header_button">
+		   <a class="sprite s_download_big" onClick="user_nologin('upload', window.location.pathname); return false" href="#"></a>
+	</div>
+		<div class="border_left"></div>
+		<ul class="enter_registration">
+																														<li><a id="login" href="/auth/login?url=%252Falgoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960">Войти</a></li>
+						<li><a href="/registration">Регистрация</a></li>
+		</ul>
+	<div class="clear"></div>
+	
+	</div>
+</div>
+		    </div>
+    <!-- Шапка конец -->        
+      
+      
+    
+    <!-- Контент блок начало -->        
+    <div id="content">
+    
+        <!--Левый блок начало -->        
+        <div id="left_block">
+        </div>
+        <!--Левый блок конец --> 
+
+
+               
+        <!--Правый блок начало -->        
+		<div id="right_block" >
+							<!--Хлебные крошки начало -->        
+				<div class="udk__bread">
+<a class='udk__bc' href="https://sciup.org">SciUp</a>
+<span class='udk__bd-div'>\</span>
+<a class='udk__bc' href="/udk">Научные статьи</a>
+		<span class='udk__bd-div'>\</span>
+												<a class='udk__bc' href="/udk/obshtie-voprosyy-nauki-i-kulxturyy">Общие вопросы науки и культуры</a>
+							<span class='udk__bd-div'>\</span>
+												<a class='udk__bc' href="/udk/informacionnyye-tehnologii-vyychislitelxnaq-tehnika-obrabotka-dannyyh">Информационные технологии. Вычислительная техника. Обработка данных</a>
+										<span class='udk__bd-div'>\</span>
+				<a class='udk__bc' href="/udk/programmnyye-sredstva">Программные средства</a>
+		</div>
+				<!--Хлебные крошки конец -->                   
+						<h1 class="dct-h1">Алгоритм Рида-Соломона как важная составляющая QR-кодов</h1>
+				
+			<div class="relative">
+				<!--<ul id="doc_info_menu" class="info_menu">
+	<li><a data-tab="main" class="active_link"	onClick="return doc_tab_open(this)" href="/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960">Основное</a></li>
+<li><a data-tab="text"  onClick="return doc_tab_open(this)" href="/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960#tab=text">Текст научной статьи</a></li>
+	<li><a data-tab="literature"  onClick="return doc_tab_open(this)" href="/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960#tab=literature">Литература</a></li>
+</ul>             -->
+	<ul class="f-menu-lng">
+			<li class="active"> Рус </li>
+						<li class="__at1"> <a href="/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960?lang=en">Анг</a> </li>
+	</ul>
+			</div>
+
+			<div class="dct-img">
+				<!-- Обложка блок начало -->        
+						<div class="cover_container">
+		<a href="/file/picture/140129960/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov.png" onClick="image_view(this,'cover_view','modalWindow2'); return false;" target="_blank" >
+			<img class="cover" id="cover" title="Алгоритм Рида-Соломона как важная составляющая QR-кодов" alt="Алгоритм Рида-Соломона как важная составляющая QR-кодов" src="/file/cover/140129960/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov.png">
+		</a>
+	</div>
+				<!-- Обложка блок конец -->        
+							<div class="subscribe-container">
+			<div class="subscribe-bg" id="sub-new">
+				<div class="subscribe-button __at1">
+					<p class="subscribe-type">Журнал</p>
+					<p class="subscribe-title-2">
+						Вестник образовательного консорциума Среднерусский университет. Информационные технологии					</p>
+					<button onclick="window.location.href='/auth/login'">Подписаться на Журнал</button> 
+				</div>
+			</div>
+		</div>
+	
+			</div>
+
+
+            <div id="content_box" class="conten_container"> 
+								<div id="doc_main_div"> 
+	<div class="dct-info">            
+					<p class='chip__author'>
+									<span class="chip" title="Бекезина Кристина Михайловна">Бекезина Кристина Михайловна</span>
+									<span class="chip" title="Иванова Наталья Александровна">Иванова Наталья Александровна</span>
+							</p>
+													<p class="dct-info_profile">Журнал: <a href="/vestnik-university"><span class="dct-info_profile-name">Вестник образовательного консорциума Среднерусский университет. Информационные технологии</span> <span class="dct-info_profile-user">@vestnik-university</span></a></p>
+													<p>Статья в выпуске: <a href="/vestnik-university/2016-2-8">2 (8), 2016 года.</a></p>
+						<!--
+			-->
+	</div>
+	<div class="dct-access">            
+			<p><strong>Бесплатный доступ</strong></p>
+	<button class="button-green1 __at1" onclick="reader_window = window.open('/read/140129960','Book Reader','left=0,top=0,height='+(screen.height-100)+',width='+(screen.width-10)+',scrollbars=1,fullscreen=yes,menubar=no,toolbar=no,location=no,directories=no,status=no,resizable=no');" type="button">Читать</button>
+
+			<button id="button_download_pdf" class="button-green1 __at2 __at3" data-url="/file/140129960/1795814.pdf" onClick="user_nologin('download','/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960');" type="button" >Скачать</button>
+			<button id="but_bookmark_add" class="button-green1 __at2" type="button" onClick="bookmark_guest(140129960);">+ Добавить в Закладки</button>
+	</div>
+			
+<div class="dct-annotation">            
+	<p>В данной статье затрагивается вопрос роли алгоритма Рида-Соломона в генерации QR-кодов. Описываются уровни коррекции ошибок и этапы создания QR-кода.</p>
+</div>
+	
+			<div class="dct-keywords">            
+	<p></p>
+	<div style='display: flex; flex-wrap: wrap; gap: 4px; align-items: center'>
+							<span class="chip" title="qr-код">qr-код</span>
+		    <span class="udk__bd-div">\</span>					<span class="chip" title="алгоритм рида-соломона">алгоритм рида-соломона</span>
+		    <span class="udk__bd-div">\</span>					<span class="chip" title="уровни коррекции ошибок">уровни коррекции ошибок</span>
+		    <span class="udk__bd-div">\</span>					<span class="chip" title="этапы создания qr-кода">этапы создания qr-кода</span>
+		    		
+	</div>
+</div>
+	
+			<div id="doc_similar_div" class="dct-literature">
+	<h2 class="dct-h2">Похожие статьи
+				    <span class="dct-h2-sub">в разделе Программные средства</span>
+			</h2>
+	<div class="similar_list">
+			<div class="similar_item">
+									<a class="similar_img" href="/razrabotka-algoritma-generacii-qr-koda-dlja-onlajn-platezhej-14122682">
+				<img src="/file/thumb/14122682.png"
+					 alt="Разработка алгоритма генерации QR-кода для онлайн платежей"
+					 title="Разработка алгоритма генерации QR-кода для онлайн платежей"
+					 onerror="this.style.display='none'">
+			</a>
+			<div class="similar_info">
+				<a class="similar_title" href="/razrabotka-algoritma-generacii-qr-koda-dlja-onlajn-platezhej-14122682">Разработка алгоритма генерации QR-кода для онлайн платежей</a>
+									<p class="similar_author">Карев Валерий Александрович, Кравец Алла Григорьевна</p>
+							</div>
+		</div>
+			<div class="similar_item">
+									<a class="similar_img" href="/metodicheskie-vozmozhnosti-vkljuchenija-temy-pomehoustojchivye-kody-142226356">
+				<img src="/file/thumb/142226356.png"
+					 alt="Методические возможности включения темы «Помехоустойчивые коды Рида-Соломона» в образовательный процесс в педагогическом вузе"
+					 title="Методические возможности включения темы «Помехоустойчивые коды Рида-Соломона» в образовательный процесс в педагогическом вузе"
+					 onerror="this.style.display='none'">
+			</a>
+			<div class="similar_info">
+				<a class="similar_title" href="/metodicheskie-vozmozhnosti-vkljuchenija-temy-pomehoustojchivye-kody-142226356">Методические возможности включения темы «Помехоустойчивые коды Рида-Соломона» в образовательный процесс в педагогическом вузе</a>
+									<p class="similar_author">Глухова Наталья Владимировна, Сафина Элина Эдуардовна</p>
+							</div>
+		</div>
+			<div class="similar_item">
+									<a class="similar_img" href="/o-nekotoryh-chislennyh-jeksperimentah-nad-spisochnym-dekoderom-147155202">
+				<img src="/file/thumb/147155202.png"
+					 alt="О некоторых численных экспериментах над списочным декодером"
+					 title="О некоторых численных экспериментах над списочным декодером"
+					 onerror="this.style.display='none'">
+			</a>
+			<div class="similar_info">
+				<a class="similar_title" href="/o-nekotoryh-chislennyh-jeksperimentah-nad-spisochnym-dekoderom-147155202">О некоторых численных экспериментах над списочным декодером</a>
+									<p class="similar_author">Кряквин Вадим Донатович, Крыжановский Константин Викторович</p>
+							</div>
+		</div>
+			<div class="similar_item">
+									<a class="similar_img" href="/kanaly-s-pamjatju-i-algebraicheskoe-kodirovanie-kodov-rida-solomona-140262982">
+				<img src="/file/thumb/140262982.png"
+					 alt="Каналы с памятью и алгебраическое кодирование кодов Рида-Соломона"
+					 title="Каналы с памятью и алгебраическое кодирование кодов Рида-Соломона"
+					 onerror="this.style.display='none'">
+			</a>
+			<div class="similar_info">
+				<a class="similar_title" href="/kanaly-s-pamjatju-i-algebraicheskoe-kodirovanie-kodov-rida-solomona-140262982">Каналы с памятью и алгебраическое кодирование кодов Рида-Соломона</a>
+									<p class="similar_author">Лошкарев Н.Г.</p>
+							</div>
+		</div>
+			<div class="similar_item">
+									<a class="similar_img" href="/razrabotka-programmnogo-obespechenija-dlja-realizacii-algoritmov-kodirovanija-i-140292321">
+				<img src="/file/thumb/140292321.png"
+					 alt="Разработка программного обеспечения для реализации алгоритмов кодирования и декодирования текстовой информации"
+					 title="Разработка программного обеспечения для реализации алгоритмов кодирования и декодирования текстовой информации"
+					 onerror="this.style.display='none'">
+			</a>
+			<div class="similar_info">
+				<a class="similar_title" href="/razrabotka-programmnogo-obespechenija-dlja-realizacii-algoritmov-kodirovanija-i-140292321">Разработка программного обеспечения для реализации алгоритмов кодирования и декодирования текстовой информации</a>
+									<p class="similar_author">Быценко А., Гончаров Д.В., Подпругин А.И., Свиридова И.В.</p>
+							</div>
+		</div>
+			<div class="similar_item">
+									<a class="similar_img" href="/algoritm-opredelenija-korrektirujushhej-sposobnosti-blochnyh-kodov-postroennyh-140191373">
+				<img src="/file/thumb/140191373.png"
+					 alt="Алгоритм определения корректирующей способности блочных кодов, построенных из сверточного кодера"
+					 title="Алгоритм определения корректирующей способности блочных кодов, построенных из сверточного кодера"
+					 onerror="this.style.display='none'">
+			</a>
+			<div class="similar_info">
+				<a class="similar_title" href="/algoritm-opredelenija-korrektirujushhej-sposobnosti-blochnyh-kodov-postroennyh-140191373">Алгоритм определения корректирующей способности блочных кодов, построенных из сверточного кодера</a>
+									<p class="similar_author">Малофей О.П., Манаенко С.с, Мишин Д.В., Потягов Д.А.</p>
+							</div>
+		</div>
+	
+	</div>                 
+	</div>                     
+
+<style>                    
+.similar_list {
+	display: flex;         
+	flex-wrap: wrap;       
+	gap: 10px;
+	margin-top: 12px;
+	margin-bottom: 2rem;
+}
+.similar_item {
+	display: flex;
+	gap: 10px;
+	width: calc(50% - 8px);
+	padding: 8px 0 8px 0;
+	box-sizing: border-box;
+	border-radius: 4px;
+}
+.similar_img {
+	flex-shrink: 0;
+	width: 65px;
+	height: 95px;
+	overflow: hidden;
+    border: 1px solid #d5d5d5;
+}
+.similar_img img {
+	width: 65px;
+	height: 95px;
+	object-fit: cover;
+}
+.similar_info {
+	flex: 1;
+	min-width: 0;
+}
+.similar_title {
+	font-size: 13px;
+	font-weight: bold;
+	color: #1a6ba0;
+	text-decoration: none;
+	display: -webkit-box;
+	-webkit-line-clamp: 4;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+.similar_title:hover {
+	text-decoration: underline;
+}
+.similar_author {
+	font-size: 11px;
+	color: #666;
+	margin: 2px 0 0;
+    white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.dct-h2-sub {
+    color: #999;
+    font-weight: normal;
+    font-size: 14px;
+}
+</style>
+
+	
+	<div class="dct-IDR">            
+		<p class="dct-IDR_url"><span>Короткий адрес: https://sciup.org/140129960</span></p>
+		<p class="dct-IDR_id"><span title="Идентификатор: 140129960">IDS: 140129960</span>
+					</div>
+
+	<div class="dct-reader">
+			<div class='pdf container' data-container='pdf'>
+					<iframe class='reader-frame' seamless style="width: 740px; border:1px solid #999;" src="/read/140129960" width="734" height="367"></iframe>
+		
+	</div>
+
+	</div>
+</div>
+
+	
+	
+
+	
+<div class="dct-annotation">            
+    <h2 class="dct-h2"> <span>Reed-Solomon algorithm as an important component of QR-codes</span></h2>
+	<p>This article deals with the issue of role of the Reed-Solomon algorithm to generate QR codes. The levels of error correction and steps for creating a QR-code are described in this article.</p>
+</div>
+
+	
+	<div id="doc_text_div" class="dct-text">
+		<h2 id="text" class="dct-h2">Текст научной статьи <span>Алгоритм Рида-Соломона как важная составляющая QR-кодов</span></h2>
+	<div>
+		<body><p>QR-код — это специальный двухмерный штрих-код, разработанный компанией Denso-Wave в 1994 году для быстрого распознавания информации из него с помощью камеры мобильного телефона.</p>
+    <p>Для корректировки ошибок в QR-кодировании используются коды Рида-Соломона (RS), записываемые после всей остальной информации.</p>
+    <p>В 1960 году сотрудники из лаборатории Линкольна Массачуссетского технологического института Ирвин Рид и Густав Соломон изобрели код и назвали его Код Рида-Соломона. В статье «Polynomial Codes over Certain Finite Fields» была представлена идея использования данного кода. Элвин Берлекэмп и Джэймс Месси в 1969 году предложили эффективные алгоритмы декодирования, а также Давид Мандельбаум предложил метод, использующий Алгоритм Евклида. Впервые код Рида-Соломона был применен в 1982 году при серийном выпуске компакт-дисков [2].</p>
+    <p>Код Рида-Соломона позволяет считать с камеры коды даже при наличии неких проблем (например, повреждение, стёртость, зачеркивание).</p>
+    <p>QR-коды имеют специальные уровни коррекции ошибок, каждый из которых позволяет восстанавливать определенный процент информации при повреждении кода:</p>
+    <ul>
+      <li>
+        <p>
+          <span>1)    L-уровень восстанавливает 7% информации, в основном используется для QR-кодов в сети Интернет, где они не могут повредиться;</span>
+        </p>
+      </li>
+      <li>
+        <p>
+          <span>2)    M-уровень восстанавливает 15% информации, является лучшим вариантом в создании QR-кодов на плакатах, стендах;</span>
+        </p>
+      </li>
+      <li>
+        <p>
+          <span>3)    Q-уровень восстанавливает 25% информации, используется при создании наклеек, упаковок и т.д., так как их вероятность повреждения более высокая;</span>
+        </p>
+      </li>
+      <li>
+        <p>
+          <span>4)    H-уровень восстанавливает 30% информации, используется как и Q-уровень, но с большим процентом восстановления информации.</span>
+        </p>
+      </li>
+    </ul>
+    <p>Чтобы создавать QR-коды с неординарным и привлекательным дизайном, необходимо использовать 30% от данных QR-кода, которые могут отсутствовать или быть испорченными, и при этом код будет рабочим. Использование H-уровня коррекции ошибок добавляет много шума (экстра-блоки) и тем самым дает возможность использовать 30% места кода для добавления интересных элементов дизайна.</p>
+    <p>В создании QR-кода можно выделить несколько основных этапов [3].</p>
+    <p>Этап 1. Кодирование данных.</p>
+    <p>Существует несколько способов кодирования информации в QR-код, что обеспечивает наилучшее сжатие данных для уменьшения размера, требуемого для изображения символа. Выбор способа зависит главным образом от символов, которые необходимо закодировать:</p>
+    <ul>
+      <li>
+        <p>
+          <span>•    цифровое кодирование – только цифры;</span>
+        </p>
+      </li>
+      <li>
+        <p>
+          <span>•    буквенно-цифровое – цифры и латинские буквы;</span>
+        </p>
+      </li>
+      <li>
+        <p>
+          <span>•    байтовое кодирование – двоичные данные;</span>
+        </p>
+      </li>
+      <li>
+        <p>
+          <span>•    кодирование иероглифов Кандзи – символы японского алфавита Kanji.</span>
+        </p>
+      </li>
+    </ul>
+    <p>Перед началом кодирования, должна быть создана пустая последовательность бит, которая потом заполняется. Это яв-</p>
+    <img src="/file/image/140129960/1356251.jpg" alt="" style="width:40pt;height:38pt;">
+    <div></div>
+    <p>ляется общим для всех способов. В дальнейшем она заполняется согласно правилам каждого конкретного способа.</p>
+    <p>При цифровом кодировании можно закодировать максимальное количество символов – 7089. Вначале последовательность цифр должна быть разбита на цифирные блоки, по 3 символа в каждом. Для каждого блока выделяется по 10 бит. Полученные трехзначные числа переводятся в двоичную систему. В дальнейшем они должны быть добавлены к общей последовательности бит в том порядке, в котором стояли до перевода в двоичное число. Для экономии места оставшиеся не в тройках числа могут быть закодированы 7 или 4 битами.</p>
+    <p>Буквенно-цифровое кодирование (латиница) кодирует максимум 4296 символов. При использовании этого способа разбитие происходит на блоки по два символа, которые кодируются в соответствии со специальной таблицей значений. После получения значения символа, оно должно быть умножено на 45. Результат суммируется со значением следующего символа. После этого можно приступать к переводу в 11 битное число двоичного вида. Все полученные биты так же добавляются в единую последовательность бит в оригинальном порядке. Здесь так же для экономии места разрешено использование 6 битного числа для завершающей группы символов.</p>
+    <p>При использовании байтового кодирования (двоичный код) – максимум 2953 байт (следовательно, около 2953 букв кириллицы в кодировке windows-1251 или около 1450 букв кириллицы в utf-8).</p>
+    <p>Кодирование иероглифов Кандзи кодирует до 1817 байт. Позволяет кодировать иероглифы в системе Shift JIS, используемой для японских символов. Каждому иероглифу соответствует свое кодовое значение, по аналогии с кодами для латинских букв. Перевод осуществляется в 13 битовое число. Сложность состоит в том, что таблиц и списков для перевода иероглифов достаточно много и их можно спутать.</p>
+    <p>Этап 2. Добавление служебной информации.</p>
+    <p>На данном этапе генерации QR-кода определяется версия кода и значение коррекции ошибок (один из четырех уровней). Кроме того добавляются служебные поля с информацией о способе кодирования и количестве данных.</p>
+    <p>Этап 3. Деление на блоки.</p>
+    <p>Сформированная последовательность байт группируется в несколько блоков (число зависит от версии кода и значения коррекции ошибок). Важным условием является заполнение всех блоков данными.</p>
+    <p>Этап 4. Создание байтов коррекции.</p>
+    <p>Именно на данном этапе генерации QR-кода ключевую роль играет алгоритм Рида-Соломона. Он применяется к каждому блоку информации с учетом выбранного варианта кода и значения коррекции ошибок. После ориентируясь по этим данным, создается многочлен генерации.</p>
+    <p>Этап 5. Объединение блоков информации.</p>
+    <p>Готовые блоки (исходные данные, коррекция ошибок) сводятся в одну двоичную последовательность.</p>
+    <p>Область применения кодов Рида-Соломона необычайно широка [4]. Их используют в ленточных запоминающих устройствах, контроллерах оперативной памяти, жестких дисках, модемах, CD-ROM/DVD-приводах и т. д. Это объясняется их умением обнаружения и исправления как одиночных, так и групповых ошибок и безболезненным переносом порчи нескольких секторов носителя, содержащего архив, и даже полное разрушение целого тома многотомного архива. И именно поэтому код Рида-Соломона является необходимой составляющей при разработке QR-кодов, так как они довольно часто могут быть испорчены.</p>
+  </body>	</div>
+</div>
+
+	
+	
+<div id="doc_literature_div" class="dct-literature">            
+	<h2 id="literature" class="dct-h2">Список литературы <span>Алгоритм Рида-Соломона как важная составляющая QR-кодов</span></h2>
+		
+			<ul>
+							<li>Гришко А.К. Управление достоверностью передачи данных в информационных системах//Труды Международного симпозиума «Надежность и качество», 2015, том 1</li>
+							<li>История Кода Рида-Соломона//. URL: http://dic.academic.ru/dic.nsf/ruwiki/1445178 Код Рида-Соломона (дата обращения: 30.11.2016)</li>
+							<li>Ковалёв А.И. QR-коды, их свойства и применение//Молодой учёный, Международный научный журнал, 2016 № 10 (114)</li>
+							<li>Развитие и возможности технологий QR-кодирования в современном мире. Иванова Н.А., Бекезина К.М.//. URL: web.snauka.ru/issues/2015/11/59467 (дата обращения: 30.11.2016)</li>
+					</ul>
+	</div>
+
+
+            </div>            
+			<div class="entity-type">
+				<!--<div class="sprite s-article1">Статья научная</div>-->
+			</div>
+            
+        </div>
+        <!--Правый блок конец -->        
+        
+    </div>
+    <!-- Контент блок конец -->        
+
+
+
+    <!-- футер блок начало -->        
+    <div class="footer">  
+		<ul class="footer_ul">
+	<!--<li class="footer_li__1">Инфо</li>-->
+	<li class="footer_li"><a href="/about">О проекте </a></li>
+	<li class="footer_li"><a href="/right-owner">Правообладателям</a></li>
+	<li class="footer_li"><a href="/rules">Правила пользования</a></li>
+	<li class="footer_li"><a href="/contacts">Контакты</a></li>
+	<li class="footer_li __at1">
+      <div class="lang-dropdown">
+          <input class="lang-toggle" type="checkbox" id="lang-toggle">
+
+          <label class="lang-button" for="lang-toggle" aria-haspopup="menu">
+              <span class="globe" aria-hidden="true">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M12.0156 0C13.6675 3.05989e-05 15.2155 0.314931 16.6623 0.94351C18.1149 1.57467
+  19.3849 2.43534 20.4748 3.52524C21.5647 4.61514 22.4253 5.88512 23.0565 7.33774C23.6851 8.78447 24 10.3325 24 11.9844C24 13.6364 23.6854 15.1904
+  23.0565 16.6478C22.4253 18.1106 21.5643 19.3852 20.4748 20.4748C19.3849 21.5647 18.1149 22.4253 16.6623 23.0565C15.2155 23.6851 13.6675 24 12.0156
+  24C10.3636 24 8.80965 23.6854 7.35216 23.0565C5.88938 22.4253 4.61476 21.5643 3.52524 20.4748C2.43572 19.3852 1.57474 18.1106 0.94351 16.6478C0.314595
+  15.1904 0 13.6364 0 11.9844C3.05989e-05 10.3325 0.314931 8.78447 0.94351 7.33774C1.57467 5.88512 2.43534 4.61514 3.52524 3.52524C4.61476 2.43572
+  5.88938 1.57474 7.35216 0.94351C8.80965 0.314595 10.3636 0 12.0156 0ZM9.25841 16.6154L9.36418 17.0036C9.61513 17.9238 9.94037 18.7937 10.3389
+  19.6118C10.7366 20.428 11.2066 21.2127 11.75 21.9651L12 22.3101L12.25 21.9651C12.7934 21.2127 13.2634 20.428 13.6611 19.6118C14.0596 18.7937 14.3849
+  17.9238 14.6358 17.0036L14.7416 16.6154H9.25841ZM2.97356 16.6154L3.24159 17.0769C3.8538 18.1325 4.62037 19.0522 5.53966 19.8341C6.46366 20.62 7.51961
+  21.2041 8.70553 21.5853L9.4387 21.8209L9.06971 21.1454C8.70727 20.481 8.38979 19.7909 8.11779 19.0757C7.84577 18.3604 7.61911 17.619 7.4375
+  16.8522L7.38221 16.6154H2.97356ZM16.6178 16.6154L16.5625 16.8522C16.3809 17.619 16.1542 18.3604 15.8822 19.0757C15.6102 19.7909 15.2927 20.481 14.9303
+  21.1454L14.5613 21.8209L15.2945 21.5853C16.4804 21.2041 17.5363 20.62 18.4603 19.8341C19.3796 19.0522 20.1462 18.1325 20.7584 17.0769L21.0264
+  16.6154H16.6178ZM2.22115 9.23077L2.16346 9.46394C2.05812 9.88533 1.97837 10.3026 1.92548 10.7151C1.87246 11.1288 1.84615 11.5572 1.84615 12C1.84615
+  12.4428 1.87246 12.8712 1.92548 13.2849C1.97837 13.6974 2.05812 14.1147 2.16346 14.5361L2.22115 14.7692H7.00361L6.95072 14.4159C6.89024 14.0127
+  6.84509 13.6147 6.8149 13.2224C6.78479 12.8308 6.76923 12.4234 6.76923 12C6.76923 11.5766 6.78479 11.1692 6.8149 10.7776C6.84509 10.3853 6.89024
+  9.98732 6.95072 9.58413L7.00361 9.23077H2.22115ZM8.84255 9.23077L8.80288 9.49279C8.74029 9.9101 8.69361 10.3232 8.66226 10.7308C8.63087 11.139 8.61538
+  11.5621 8.61538 12C8.61538 12.4379 8.63087 12.861 8.66226 13.2692C8.69361 13.6768 8.74029 14.0899 8.80288 14.5072L8.84255 14.7692H15.1575L15.1971
+  14.5072C15.2597 14.0899 15.3064 13.6768 15.3377 13.2692C15.3691 12.861 15.3846 12.4379 15.3846 12C15.3846 11.5621 15.3691 11.139 15.3377
+  10.7308C15.3064 10.3232 15.2597 9.9101 15.1971 9.49279L15.1575 9.23077H8.84255ZM16.9964 9.23077L17.0493 9.58413C17.1098 9.98732 17.1549 10.3853
+  17.1851 10.7776C17.2152 11.1692 17.2308 11.5766 17.2308 12C17.2308 12.4234 17.2152 12.8308 17.1851 13.2224C17.1549 13.6147 17.1098 14.0127 17.0493
+  14.4159L16.9964 14.7692H21.7788L21.8365 14.5361C21.9419 14.1147 22.0216 13.6974 22.0745 13.2849C22.1275 12.8712 22.1538 12.4428 22.1538 12C22.1538
+  11.5572 22.1275 11.1288 22.0745 10.7151C22.0216 10.3026 21.9419 9.88533 21.8365 9.46394L21.7788 9.23077H16.9964ZM8.70553 2.41466C7.51961 2.79589
+  6.46366 3.37999 5.53966 4.16587C4.62037 4.94779 3.8538 5.86754 3.24159 6.92308L2.97356 7.38462H7.38221L7.4375 7.14784C7.61911 6.38105 7.84577 5.63959
+  8.11779 4.92428C8.38979 4.20906 8.70727 3.51905 9.06971 2.85457L9.4387 2.17909L8.70553 2.41466ZM11.75 2.03486C11.2066 2.78725 10.7366 3.57203 10.3389
+  4.38822C9.94037 5.20634 9.61513 6.07625 9.36418 6.99639L9.25841 7.38462H14.7416L14.6358 6.99639C14.3849 6.07625 14.0596 5.20634 13.6611
+  4.38822C13.2634 3.57203 12.7934 2.78725 12.25 2.03486L12 1.6899L11.75 2.03486ZM14.9303 2.85457C15.2927 3.51905 15.6102 4.20906 15.8822 4.92428C16.1542
+  5.63959 16.3809 6.38105 16.5625 7.14784L16.6178 7.38462H21.0264L20.7584 6.92308C20.1462 5.86754 19.3796 4.94779 18.4603 4.16587C17.5363 3.37999
+  16.4804 2.79589 15.2945 2.41466L14.5613 2.17909L14.9303 2.85457Z" fill="#666666"/>
+                  </svg>
+              </span>
+              <span>Русский</span>
+              <span class="arrow arrow-down" aria-hidden="true">
+                  <svg width="24" height="14" viewBox="0 0 24 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M22.5505 0C23.0125 0.000108424 23.3403 0.14693 23.5988 0.415703C23.8574 0.684913 24 1.02736 24 1.50892C23.9999 1.99023
+  23.8572 2.33102 23.5988 2.60014L13.0492 13.5843C12.8907 13.7493 12.7393 13.8467 12.5961 13.9001C12.4197 13.9657 12.2216 14 11.999 14C11.7767 13.9999
+  11.5802 13.9656 11.4039 13.9001C11.2606 13.8468 11.1093 13.7492 10.9508 13.5843L0.399328 2.60014C0.141159 2.3311 7.84012e-05 1.98992 0 1.50892C0
+  1.02736 0.140722 0.684913 0.399328 0.415703C0.657934 0.146493 0.986892 0 1.44948 0C1.91153 8.16162e-05 2.23927 0.146948 2.49772 0.415703L11.4442
+  9.72705L11.999 10.3066L21.5004 0.415703C21.759 0.146534 22.088 0 22.5505 0Z" fill="#666666"/>
+                  </svg>
+              </span>
+              <span class="arrow arrow-up" aria-hidden="true">
+                  <svg width="24" height="13" viewBox="0 0 24 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12.001 0C12.2233 5.13222e-05 12.4198 0.0319584 12.5961 0.0927909C12.7394 0.142248 12.8907 0.232871 13.0492
+  0.38601L23.6007 10.5856C23.8588 10.8354 23.9999 11.1522 24 11.5989C24 12.046 23.8593 12.364 23.6007 12.614C23.3421 12.864 23.0131 13 22.5505
+  13C22.0885 12.9999 21.7607 12.8635 21.5023 12.614L12.5558 3.96774L12.001 3.42955L2.49964 12.614C2.24104 12.8639 1.91204 13 1.44948 13C0.987466 12.9999
+  0.659679 12.8636 0.401248 12.614C0.142643 12.364 4.04411e-08 12.046 0 11.5989C7.88275e-05 11.1519 0.142754 10.8355 0.401248 10.5856L10.9508
+  0.38601C11.1093 0.232836 11.2607 0.14234 11.4039 0.0927909C11.5803 0.0318781 11.7784 1.88086e-08 12.001 0Z" fill="#666666"/>
+                  </svg>
+              </span>
+          </label>
+
+          <div class="lang-menu" role="menu">
+              <a href="/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960?lang=en" role="menuitem" class="">
+                  				  <span class='lang-name'>English</span>
+              </a>
+              <a href="/algoritm-rida-solomona-kak-vazhnaja-sostavljajushhaja-qr-kodov-140129960" role="menuitem" class="active">
+                                    	<span class="check" aria-hidden="true">
+						<svg width="24" height="17" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M8.20746 13.2895L21.3614 0.454343C21.6719 0.151448 22.034 0 22.4479 0C22.8618 0 23.224 0.151448 23.5344
+  0.454343C23.8448 0.757238 24 1.11693 24 1.53341C24 1.94989 23.8448 2.30958 23.5344 2.61247L9.29393 16.5457C8.98351 16.8486 8.62135 17 8.20746
+  17C7.79357 17 7.43142 16.8486 7.121 16.5457L0.447003 10.0334C0.136584 9.73051 -0.0121581 9.37082 0.000776046 8.95434C0.0137101 8.53786 0.175386
+  8.17817 0.485805 7.87528C0.796223 7.57238 1.16485 7.42094 1.59167 7.42094C2.0185 7.42094 2.38712 7.57238 2.69754 7.87528L8.20746 13.2895Z"
+  fill="black"/>
+                      </svg>
+                  	</span>
+				  				  <span class='lang-name'>Русский</span>
+              </a>
+          </div>
+      </div>
+</li>
+	<li class="footer_li __at1 "> <a href="/company"> Разработчик: ООО "Технологии мобильного чтения"</a>
+	<br>Государственная  аккредитация  IT:  АО-20230321-12352390637-3 &nbsp;  | &nbsp;  Минцифры России   </li>
+	
+	<li class="footer_li __at1"> 2026 © SciUp.org — Платформа публикаций в области науки, технологий, медицины, образования и литературы. <a href="/Trademark-SciUp.pdf" target="_blank">"SciUp" —  зарегистрированный товарный знак.</a> Все права защищены.</li>
+</ul>
+
+<ul class="footer_ul">
+	<!--<li class="footer_li__1">Услуги</li>-->
+	<li class="footer_li"><a href="/for-publishers">Издательствам</a></li>
+	<li class="footer_li"><a href="/for-journals">Научным  журналам</a></li>
+	<li class="footer_li"><a href="/for-authors">Авторам</a></li>
+	<li class="footer_li"><a href="/for-readers">Читателям</a></li>
+</ul>        
+<ul class="footer_ul">
+	<!--<li class="footer_li__1">Android приложения</li>-->
+	<li class="footer_li"><a href="/udk" target="_blank" style="white-space: nowrap;">Каталог научных статей</a></li>
+	<li class="footer_li"><a href="/journals" target="_blank">Журналы</a></li>
+</ul>        
+
+  
+	
+<div class="footer_app">    
+	<img src="/static/images/qr-SciUp-App-3.png" alt="QR-код для установки приложения SciUp" title="QR-код для установки приложения SciUp">
+	<span>Наведите камеру и скачайте бесплатное приложение <strong>SciUp</strong> </span>
+            
+	<ul>
+		<a class="footer_app-GPlay" href="https://play.google.com/store/apps/details?id=org.sciup" target="_blank" rel="nofollow" title="Загрузить из Google Play">  </a>
+
+		<a class="footer_app-RuStore" href="https://www.rustore.ru/catalog/app/org.sciup"  target="_blank" rel="nofollow" title="Загрузить из RuStore">  </a>  
+		<a class="footer_app-AppGallery" href="https://appgallery.huawei.com/#/app/C111407597" target="_blank" rel="nofollow" title="Загрузить из AppGallery">  </a>        
+	</ul>
+</div>
+    </div>
+    <!-- футер блок конец -->  
+    
+    
+          
+</div>
+
+<!-- модальное окно начало -->
+<div class="modal_bg" id="modal_bg" style="display: none;">
+	<div id="modalWindow" data-id=""></div>
+	<div id="modalLoading" class="m-loading" style="display: none;">
+			<div class="loader"></div>
+	  <div onClick="modal_hide();"  class="sprite s-close1">&nbsp;</div>
+	</div>
+	<div id="modalError" class="m-error" style="display: none;">
+			<p>Нет соединения с интернетом. <br> Проверьте соединение и повторите попытку.</p>
+	  <div onClick="modal_hide();"  class="sprite s-close1">&nbsp;</div >
+	</div>
+</div>
+<!-- модальное окно конец -->
+<script src='/static/js/common.js'></script>
+<script src='/static/js/modal.js'></script>
+<script src='/static/js/error.js'></script>
+<script src='/static/js/option.js'></script>
+<script src='/static/js/auth_reg_modal.js'></script>
+<script src='/static/lib/jquery.imgareaselect.js'></script>
+<script src='/static/js/doc_view.js'></script>
+<script src='/static/js/image.js'></script>
+<script src='/static/js/cover.js'></script>
+<script src='/static/js/journal.js'></script>
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+	ga('create', 'UA-53996447-2', 'auto');
+	ga('send', 'pageview');
+</script>
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter25925774 = new Ya.Metrika({
+                    id:25925774,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/25925774" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+<script type="text/javascript">(window.Image ? (new Image()) : document.createElement('img')).src = location.protocol + '//vk.com/rtrg?r=ylN7Vfks839BPqotVsWTMnhzzXFpNRlr1sNbW6v2PEsqH1mWmpf1MPQAOmy3BOaVxYTmRF2ghfY8BzproXgyjW7Ky8A1P1yVGMDYsxGhAgJnB4cNAL8G1S4N2*Za8/6zwaNemOY9qjzWS2DAhFv05KgMusC*Sp4gaOhuQrnEWHw-';</script>
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript" >
+   (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+   m[i].l=1*new Date();
+   for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+   k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+   (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+   ym(104278240, "init", {
+        clickmap:true,
+        trackLinks:true,
+        accurateTrackBounce:true
+   });
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/104278240" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+</body>
+</html>
