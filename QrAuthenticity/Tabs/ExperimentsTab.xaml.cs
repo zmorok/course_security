@@ -72,6 +72,13 @@ public partial class ExperimentsTab : UserControl
                 ExpStartBox.Text = "0"; ExpEndBox.Text = "95"; ExpStepBox.Text = "10";
                 break;
         }
+
+        var (minVal, maxVal, unit) = ImageDistortionService.GetValidIntensityRange(selected);
+        string rangeHint = string.IsNullOrEmpty(unit)
+            ? $"Допустимый диапазон: от {minVal:0} до {maxVal:0}"
+            : $"Допустимый диапазон: от {minVal:0} до {maxVal:0} {unit}";
+        ExpStartBox.ToolTip = $"Начальное значение интенсивности. {rangeHint}";
+        ExpEndBox.ToolTip = $"Конечное значение интенсивности. {rangeHint}";
     }
 
     private async void StartExperimentSeries_Click(object sender, RoutedEventArgs e)
@@ -95,14 +102,38 @@ public partial class ExperimentsTab : UserControl
             return;
         }
 
+        if (step <= 0)
+        {
+            MessageBox.Show("Шаг изменения интенсивности должен быть больше 0.", "Ошибка ввода", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (start > end)
+        {
+            MessageBox.Show("Начальное значение (От) не может превышать конечное (До).", "Ошибка ввода", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var (minVal, maxVal, unit) = ImageDistortionService.GetValidIntensityRange(distortion);
+        if (start < minVal || end > maxVal)
+        {
+            string unitSuffix = string.IsNullOrEmpty(unit) ? string.Empty : $" {unit}";
+            MessageBox.Show(
+                $"Для искажения «{distortion}» допустимый диапазон интенсивности составляет от {minVal:0} до {maxVal:0}{unitSuffix}.",
+                "Недопустимый диапазон",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
         int attempts = int.TryParse(ExpAttemptsBox.Text, out int a) && a > 0 ? a : 10;
         int seed = int.TryParse(ExpSeedBox.Text, out int s) ? s : 42;
 
-        StartExperimentBtn.IsEnabled = false;
-        StopExperimentBtn.Visibility = Visibility.Visible;
-        StopExperimentBtn.IsEnabled = true;
+        StartExperimentBtn.Visibility = Visibility.Collapsed;
         ExperimentProgressBar.Visibility = Visibility.Visible;
         ExperimentProgressBar.Value = 0;
+        StopExperimentBtn.IsEnabled = true;
+        StopExperimentBtn.Visibility = Visibility.Visible;
 
         _lastExperimentSourceImage = sourceImage;
         _currentDistortedSample = null;
@@ -154,6 +185,7 @@ public partial class ExperimentsTab : UserControl
                 DistortedSampleCaption.Text = "Эксперимент остановлен до завершения первой точки.";
             }
 
+            StartExperimentBtn.Visibility = Visibility.Visible;
             StartExperimentBtn.IsEnabled = true;
             StopExperimentBtn.Visibility = Visibility.Collapsed;
             StopExperimentBtn.IsEnabled = true;

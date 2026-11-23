@@ -56,15 +56,9 @@
                             </Grid>
                         </Expander>
 
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" x:Name="StartExperimentBtn" Content="Запустить серию экспериментов" Style="{StaticResource PrimaryButton}" Click="StartExperimentSeries_Click" Height="36"/>
-                            <Button Grid.Column="1" x:Name="StopExperimentBtn" Content="Остановить эксперимент" Style="{StaticResource DangerButton}" Click="StopExperimentSeries_Click" Height="36" Padding="14,8" Margin="8,0,0,0" Visibility="Collapsed" ToolTip="Остановить серию и сохранить уже полученные результаты"/>
-                        </Grid>
-                        <ProgressBar x:Name="ExperimentProgressBar" Height="8" Minimum="0" Maximum="100" Margin="0,8,0,0" Visibility="Collapsed"/>
+                        <ProgressBar x:Name="ExperimentProgressBar" Height="10" Minimum="0" Maximum="100" Margin="0,0,0,10" Visibility="Collapsed"/>
+                        <Button x:Name="StartExperimentBtn" Content="Запустить серию экспериментов" Style="{StaticResource PrimaryButton}" Click="StartExperimentSeries_Click" Height="36"/>
+                        <Button x:Name="StopExperimentBtn" Content="Остановить эксперимент" Style="{StaticResource DangerButton}" Click="StopExperimentSeries_Click" Height="36" Visibility="Collapsed" ToolTip="Остановить серию и сохранить уже полученные результаты"/>
                     </StackPanel>
                 </Border>
 
@@ -118,16 +112,16 @@
                         </Style>
                     </DataGrid.CellStyle>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Искажение" Binding="{Binding Distortion}" Width="160"/>
-                        <DataGridTextColumn Header="Интенсивность" Binding="{Binding Intensity, StringFormat='{}{0:F1}'}" Width="110"/>
-                        <DataGridTextColumn Header="Попыток" Binding="{Binding Attempts}" Width="75"/>
-                        <DataGridTextColumn Header="Распознано" Binding="{Binding DecodeSuccesses}" Width="90"/>
-                        <DataGridTextColumn Binding="{Binding DecodeRate, StringFormat='{}{0:P1}'}" Width="90">
+                        <DataGridTextColumn Header="Искажение" Binding="{Binding Distortion}" Width="*" MinWidth="175"/>
+                        <DataGridTextColumn Header="Интенсивность" Binding="{Binding Intensity, StringFormat='{}{0:F1}'}" Width="105"/>
+                        <DataGridTextColumn Header="Попыток" Binding="{Binding Attempts}" Width="70"/>
+                        <DataGridTextColumn Header="Распознано" Binding="{Binding DecodeSuccesses}" Width="85"/>
+                        <DataGridTextColumn Binding="{Binding DecodeRate, StringFormat='{}{0:P1}'}" Width="80">
                             <DataGridTextColumn.Header>
                                 <TextBlock Text="P_decode"/>
                             </DataGridTextColumn.Header>
                         </DataGridTextColumn>
-                        <DataGridTextColumn Header="Время (мс)" Binding="{Binding AverageDecodeMilliseconds, StringFormat='{}{0:F1}'}" Width="85"/>
+                        <DataGridTextColumn Header="Время (мс)" Binding="{Binding AverageDecodeMilliseconds, StringFormat='{}{0:F1}'}" Width="80"/>
                     </DataGrid.Columns>
                 </DataGrid>
 
