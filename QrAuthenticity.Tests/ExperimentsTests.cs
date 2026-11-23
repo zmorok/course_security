@@ -179,6 +179,22 @@ public sealed class ExperimentsTests
                 stepIntensity: 0,
                 attemptsPerPoint: 1);
             CollectionAssert.AreEqual(new[] { 0.0, 1.0, 2.0 }, fallbackStepSeries.Select(r => r.Intensity).ToArray());
+
+            using var cts = new CancellationTokenSource();
+            var cancelledSeries = runner.RunSeries(
+                _sourceQr,
+                ImageDistortionService.DistortionContrast,
+                startIntensity: 0,
+                endIntensity: 20,
+                stepIntensity: 5,
+                attemptsPerPoint: 1,
+                onProgress: (step, _, _) =>
+                {
+                    if (step == 2)
+                        cts.Cancel();
+                },
+                cancellationToken: cts.Token);
+            CollectionAssert.AreEqual(new[] { 0.0, 5.0 }, cancelledSeries.Select(r => r.Intensity).ToArray());
         });
     }
 

@@ -22,6 +22,7 @@ public partial class ExperimentsTab : UserControl
     private readonly ObservableCollection<ExperimentResult> _experimentResults = new();
     private BitmapSource? _lastExperimentSourceImage;
     private BitmapSource? _currentDistortedSample;
+    private CancellationTokenSource? _experimentCts;
 
     public Func<BitmapSource?>? GetSourceQrImage { get; set; }
 
@@ -98,6 +99,8 @@ public partial class ExperimentsTab : UserControl
         int seed = int.TryParse(ExpSeedBox.Text, out int s) ? s : 42;
 
         StartExperimentBtn.IsEnabled = false;
+        StopExperimentBtn.Visibility = Visibility.Visible;
+        StopExperimentBtn.IsEnabled = true;
         ExperimentProgressBar.Visibility = Visibility.Visible;
         ExperimentProgressBar.Value = 0;
 
@@ -107,39 +110,66 @@ public partial class ExperimentsTab : UserControl
         DistortedSampleCaption.Text = "Выполняется серия экспериментов...";
         _experimentResults.Clear();
 
-        await Task.Run(() =>
+        _experimentCts?.Dispose();
+        _experimentCts = new CancellationTokenSource();
+        var token = _experimentCts.Token;
+
+        try
         {
-            _experimentRunner.RunSeries(
-                sourceImage,
-                distortion,
-                start,
-                end,
-                step,
-                attempts,
-                seed,
-                (stepIdx, totalSteps, pointResult) =>
-                {
-                    Dispatcher.Invoke(() =>
+            await Task.Run(() =>
+            {
+                _experimentRunner.RunSeries(
+                    sourceImage,
+                    distortion,
+                    start,
+                    end,
+                    step,
+                    attempts,
+                    seed,
+                    (stepIdx, totalSteps, pointResult) =>
                     {
-                        _experimentResults.Add(pointResult);
-                        ExperimentProgressBar.Value = (double)stepIdx / totalSteps * 100.0;
-
-                        if (ExperimentResultsGrid.SelectedItem is null)
+                        Dispatcher.Invoke(() =>
                         {
-                            ShowDistortedSampleForResult(pointResult);
-                        }
-                    });
-                }
-            );
-        });
+                            _experimentResults.Add(pointResult);
+                            ExperimentProgressBar.Value = (double)stepIdx / totalSteps * 100.0;
 
-        if (ExperimentResultsGrid.SelectedItem is null && _experimentResults.Count > 0)
-        {
-            ExperimentResultsGrid.SelectedItem = _experimentResults[^1];
+                            if (ExperimentResultsGrid.SelectedItem is null)
+                            {
+                                ShowDistortedSampleForResult(pointResult);
+                            }
+                        });
+                    },
+                    token
+                );
+            });
         }
+        finally
+        {
+            if (ExperimentResultsGrid.SelectedItem is null && _experimentResults.Count > 0)
+            {
+                ExperimentResultsGrid.SelectedItem = _experimentResults[^1];
+            }
+            else if (_experimentResults.Count == 0)
+            {
+                DistortedSampleCaption.Text = "Эксперимент остановлен до завершения первой точки.";
+            }
 
-        StartExperimentBtn.IsEnabled = true;
-        ExperimentProgressBar.Visibility = Visibility.Collapsed;
+            StartExperimentBtn.IsEnabled = true;
+            StopExperimentBtn.Visibility = Visibility.Collapsed;
+            StopExperimentBtn.IsEnabled = true;
+            ExperimentProgressBar.Visibility = Visibility.Collapsed;
+
+            _experimentCts?.Dispose();
+            _experimentCts = null;
+        }
+    }
+
+    private void StopExperimentSeries_Click(object sender, RoutedEventArgs e)
+    {
+        if (_experimentCts is null) return;
+
+        StopExperimentBtn.IsEnabled = false;
+        _experimentCts.Cancel();
     }
 
     private void ExperimentResultsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)

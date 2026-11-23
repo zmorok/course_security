@@ -26,10 +26,16 @@ public sealed class ExperimentRunner
     /// <summary>
     /// Выполняет серию испытаний для одной точки интенсивности.
     /// </summary>
-    public ExperimentResult RunPoint(BitmapSource source, string distortion, double intensity, int attempts = 10, int baseSeed = 42)
+    public ExperimentResult RunPoint(
+        BitmapSource source,
+        string distortion,
+        double intensity,
+        int attempts = 10,
+        int baseSeed = 42,
+        CancellationToken cancellationToken = default)
     {
         if (attempts <= 0)
-            return new ExperimentResult(distortion, intensity, 0, 0, 0, 0);
+            return new ExperimentResult(distortion, intensity, 0, 0, 0, 0) { Seed = baseSeed };
 
         int decodeSuccesses = 0;
         int validSignatures = 0;
@@ -37,6 +43,9 @@ public sealed class ExperimentRunner
 
         for (int i = 0; i < attempts; i++)
         {
+            if (cancellationToken.IsCancellationRequested)
+                break;
+
             int seed = baseSeed + i * 17;
             var distortedImage = _distortions.Apply(source, distortion, intensity, seed);
 
@@ -76,7 +85,8 @@ public sealed class ExperimentRunner
         double stepIntensity,
         int attemptsPerPoint = 10,
         int baseSeed = 42,
-        Action<int, int, ExperimentResult>? onProgress = null)
+        Action<int, int, ExperimentResult>? onProgress = null,
+        CancellationToken cancellationToken = default)
     {
         var results = new List<ExperimentResult>();
 
@@ -88,8 +98,14 @@ public sealed class ExperimentRunner
 
         for (double intensity = startIntensity; intensity <= endIntensity + (stepIntensity * 0.01); intensity += stepIntensity)
         {
+            if (cancellationToken.IsCancellationRequested)
+                break;
+
             currentStep++;
-            var pointResult = RunPoint(source, distortion, Math.Round(intensity, 2), attemptsPerPoint, baseSeed);
+            var pointResult = RunPoint(source, distortion, Math.Round(intensity, 2), attemptsPerPoint, baseSeed, cancellationToken);
+            if (cancellationToken.IsCancellationRequested)
+                break;
+
             results.Add(pointResult);
 
             onProgress?.Invoke(currentStep, totalSteps, pointResult);
