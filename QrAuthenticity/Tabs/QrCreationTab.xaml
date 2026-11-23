@@ -49,8 +49,8 @@
                                 <ColumnDefinition Width="8"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Content="Сформировать QR" Style="{StaticResource PrimaryButton}" Click="CreateSignedQr_Click" Height="36" ToolTip="Сформировать и подписать цифровой подписью QR-код"/>
-                            <Button Grid.Column="2" Content="Сохранить в PNG" Style="{StaticResource SecondaryButton}" Click="SaveQrImage_Click" Height="36" ToolTip="Сохранить изображение QR-кода в файл PNG"/>
+                            <Button Grid.Column="0" Content="Сформировать QR" Style="{StaticResource PrimaryButton}" Click="CreateSignedQr_Click" MinHeight="40" Padding="14,5,14,10" ToolTip="Сформировать и подписать цифровой подписью QR-код"/>
+                            <Button Grid.Column="2" Content="Сохранить в PNG" Style="{StaticResource SecondaryButton}" Click="SaveQrImage_Click" MinHeight="40" Padding="12,5,12,10" ToolTip="Сохранить изображение QR-кода в файл PNG"/>
                         </Grid>
                     </StackPanel>
                 </Border>
