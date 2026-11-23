@@ -59,7 +59,10 @@ public sealed class ExperimentRunner
         }
 
         double averageDecodeMs = totalMilliseconds / attempts;
-        return new ExperimentResult(distortion, intensity, attempts, decodeSuccesses, validSignatures, averageDecodeMs);
+        return new ExperimentResult(distortion, intensity, attempts, decodeSuccesses, validSignatures, averageDecodeMs)
+        {
+            Seed = baseSeed
+        };
     }
 
     /// <summary>

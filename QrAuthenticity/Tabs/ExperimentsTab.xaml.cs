@@ -20,6 +20,8 @@ public partial class ExperimentsTab : UserControl
     private readonly StatisticsService _statisticsService = new();
 
     private readonly ObservableCollection<ExperimentResult> _experimentResults = new();
+    private BitmapSource? _lastExperimentSourceImage;
+    private BitmapSource? _currentDistortedSample;
 
     public Func<BitmapSource?>? GetSourceQrImage { get; set; }
 
@@ -99,6 +101,10 @@ public partial class ExperimentsTab : UserControl
         ExperimentProgressBar.Visibility = Visibility.Visible;
         ExperimentProgressBar.Value = 0;
 
+        _lastExperimentSourceImage = sourceImage;
+        _currentDistortedSample = null;
+        DistortedSamplePreview.Source = null;
+        DistortedSampleCaption.Text = "Выполняется серия экспериментов...";
         _experimentResults.Clear();
 
         await Task.Run(() =>
@@ -118,15 +124,76 @@ public partial class ExperimentsTab : UserControl
                         _experimentResults.Add(pointResult);
                         ExperimentProgressBar.Value = (double)stepIdx / totalSteps * 100.0;
 
-                        var sample = _distortionService.Apply(sourceImage, distortion, pointResult.Intensity, seed);
-                        DistortedSamplePreview.Source = sample;
+                        if (ExperimentResultsGrid.SelectedItem is null)
+                        {
+                            ShowDistortedSampleForResult(pointResult);
+                        }
                     });
                 }
             );
         });
 
+        if (ExperimentResultsGrid.SelectedItem is null && _experimentResults.Count > 0)
+        {
+            ExperimentResultsGrid.SelectedItem = _experimentResults[^1];
+        }
+
         StartExperimentBtn.IsEnabled = true;
         ExperimentProgressBar.Visibility = Visibility.Collapsed;
+    }
+
+    private void ExperimentResultsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ExperimentResultsGrid.SelectedItem is ExperimentResult selected)
+        {
+            ShowDistortedSampleForResult(selected);
+        }
+    }
+
+    private void ShowDistortedSampleForResult(ExperimentResult result)
+    {
+        if (_distortionService is null) return;
+
+        var sourceImage = _lastExperimentSourceImage ?? GetSourceQrImage?.Invoke();
+        if (sourceImage is null) return;
+
+        var sample = _distortionService.Apply(sourceImage, result.Distortion, result.Intensity, result.Seed);
+        _currentDistortedSample = sample;
+        DistortedSamplePreview.Source = sample;
+        DistortedSampleCaption.Text = $"{result.Distortion}: {result.Intensity:F1} (P_decode = {result.DecodeRate:P1})";
+    }
+
+    private void SaveDistortedSample_Click(object sender, RoutedEventArgs e)
+    {
+        if (_qrService is null || _currentDistortedSample is null)
+        {
+            MessageBox.Show("Сначала запустите серию экспериментов или выберите строку в таблице результатов.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        string fileName = ExperimentResultsGrid.SelectedItem is ExperimentResult selected
+            ? $"distorted_qr_{selected.Intensity:F1}.png"
+            : "distorted_qr_sample.png";
+
+        var dialog = new SaveFileDialog
+        {
+            Title = "Сохранение образца искаженного QR-кода",
+            Filter = "Изображение PNG (*.png)|*.png",
+            FileName = fileName
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            try
+            {
+                _qrService.SavePng(_currentDistortedSample, dialog.FileName);
+                MessageBox.Show($"Образец искажения успешно сохранен:\n{dialog.FileName}", "Файл сохранен", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Не удалось сохранить изображение: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 
     private void ExportCsv_Click(object sender, RoutedEventArgs e)
@@ -162,6 +229,8 @@ public partial class ExperimentsTab : UserControl
     private void ClearExperimentResults_Click(object sender, RoutedEventArgs e)
     {
         _experimentResults.Clear();
+        _currentDistortedSample = null;
         DistortedSamplePreview.Source = null;
+        DistortedSampleCaption.Text = "Выберите строку в таблице результатов для просмотра образца.";
     }
 }

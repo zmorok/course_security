@@ -67,6 +67,8 @@
                         <Border BorderBrush="#E1E4E8" BorderThickness="1" Background="#FAFAFA" CornerRadius="4" Height="220" Padding="8">
                             <Image x:Name="DistortedSamplePreview" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                         </Border>
+                        <TextBlock x:Name="DistortedSampleCaption" Text="Выберите строку в таблице результатов для просмотра образца." Foreground="#57606A" Margin="0,8,0,8" TextWrapping="Wrap"/>
+                        <Button x:Name="SaveDistortedSampleBtn" Content="Сохранить выбранный образец в PNG" Style="{StaticResource SecondaryButton}" Click="SaveDistortedSample_Click" Height="36"/>
                     </StackPanel>
                 </Border>
             </StackPanel>
@@ -85,7 +87,29 @@
                     <TextBlock Text="Вероятность распознавания P_decode и среднее время обработки." Foreground="#57606A"/>
                 </StackPanel>
 
-                <DataGrid Grid.Row="1" x:Name="ExperimentResultsGrid" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" BorderThickness="1" BorderBrush="#D0D7DE" Margin="0,6,0,12">
+                <DataGrid Grid.Row="1" x:Name="ExperimentResultsGrid" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" SelectionMode="Single" SelectionChanged="ExperimentResultsGrid_SelectionChanged" BorderThickness="1" BorderBrush="#D0D7DE" Margin="0,6,0,12">
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Style.Resources>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#0969DA"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#FFFFFF"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#0969DA"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="#FFFFFF"/>
+                            </Style.Resources>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Padding" Value="4,3"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#0969DA"/>
+                                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.CellStyle>
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Искажение" Binding="{Binding Distortion}" Width="160"/>
                         <DataGridTextColumn Header="Интенсивность" Binding="{Binding Intensity, StringFormat='{}{0:F1}'}" Width="110"/>
