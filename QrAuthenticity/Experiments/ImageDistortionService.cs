@@ -31,6 +31,21 @@ public sealed class ImageDistortionService
     };
 
     /// <summary>
+    /// Возвращает допустимый физический диапазон интенсивности (Min, Max, единица измерения) для заданного вида искажения.
+    /// </summary>
+    public static (double Min, double Max, string Unit) GetValidIntensityRange(string distortion) => distortion switch
+    {
+        DistortionRotate => (0.0, 360.0, "°"),
+        DistortionScale => (0.0, 100.0, "%"),
+        DistortionOcclusion => (0.0, 100.0, "%"),
+        DistortionNoise => (0.0, 100.0, "%"),
+        DistortionBlur => (0.0, 100.0, "px"),
+        DistortionContrast => (0.0, 100.0, "%"),
+        DistortionJpeg => (0.0, 100.0, "%"),
+        _ => (0.0, 100.0, string.Empty)
+    };
+
+    /// <summary>
     /// Применяет выбранное искажение к исходному изображению с заданной интенсивностью.
     /// Исходный объект никогда не модифицируется на месте (создается новая копия).
     /// </summary>
@@ -94,12 +109,10 @@ public sealed class ImageDistortionService
     private static BitmapSource ApplyScale(BitmapSource source, double intensityPercent)
     {
         var (pixels, width, height, stride) = GetPixelBufferBgra32(source);
-        double factor = intensityPercent < 99.0
-            ? 1.0 - (intensityPercent / 100.0)
-            : 0.01 / (1.0 + (intensityPercent - 99.0) / 50.0);
+        double clamped = Math.Clamp(intensityPercent, 0.0, 100.0);
 
-        int lowW = Math.Clamp((int)Math.Round(width * factor), 1, width);
-        int lowH = Math.Clamp((int)Math.Round(height * factor), 1, height);
+        int lowW = Math.Clamp((int)Math.Round(width - (width - 1) * (clamped / 100.0)), 1, width);
+        int lowH = Math.Clamp((int)Math.Round(height - (height - 1) * (clamped / 100.0)), 1, height);
 
         var result = new byte[stride * height];
 
@@ -178,46 +191,19 @@ public sealed class ImageDistortionService
         var (pixels, width, height, stride) = GetPixelBufferBgra32(source);
         var rng = new Random(seed);
 
-        if (noisePercent <= 100.0)
+        double probability = Math.Clamp(noisePercent / 100.0, 0.0, 1.0);
+        for (int y = 0; y < height; y++)
         {
-            double probability = Math.Clamp(noisePercent / 100.0, 0.0, 1.0);
-            for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
             {
-                for (int x = 0; x < width; x++)
-                {
-                    if (rng.NextDouble() < probability)
-                    {
-                        byte color = (byte)(rng.Next(2) == 0 ? 0 : 255);
-                        int index = y * stride + x * 4;
-                        pixels[index] = color;
-                        pixels[index + 1] = color;
-                        pixels[index + 2] = color;
-                        pixels[index + 3] = 255;
-                    }
-                }
-            }
-        }
-        else
-        {
-            int grain = Math.Clamp(1 + (int)((noisePercent - 100.0) / 50.0), 2, 64);
-            for (int by = 0; by < height; by += grain)
-            {
-                int blockEndY = Math.Min(height, by + grain);
-                for (int bx = 0; bx < width; bx += grain)
+                if (rng.NextDouble() < probability)
                 {
                     byte color = (byte)(rng.Next(2) == 0 ? 0 : 255);
-                    int blockEndX = Math.Min(width, bx + grain);
-                    for (int y = by; y < blockEndY; y++)
-                    {
-                        for (int x = bx; x < blockEndX; x++)
-                        {
-                            int index = y * stride + x * 4;
-                            pixels[index] = color;
-                            pixels[index + 1] = color;
-                            pixels[index + 2] = color;
-                            pixels[index + 3] = 255;
-                        }
-                    }
+                    int index = y * stride + x * 4;
+                    pixels[index] = color;
+                    pixels[index + 1] = color;
+                    pixels[index + 2] = color;
+                    pixels[index + 3] = 255;
                 }
             }
         }
@@ -355,16 +341,27 @@ public sealed class ImageDistortionService
 
     private static BitmapSource ApplyJpegReencode(BitmapSource source, double artifactPercent)
     {
-        BitmapSource input = source;
-        if (artifactPercent > 99.0)
+        double clamped = Math.Clamp(artifactPercent, 0.0, 100.0);
+        int quality = (int)Math.Clamp(Math.Round(100.0 - clamped), 1, 100);
+
+        int origW = source.PixelWidth;
+        int origH = source.PixelHeight;
+        BitmapSource toEncode = source;
+
+        if (clamped > 30.0)
         {
-            double extraDownscale = Math.Min(95.0, (artifactPercent - 99.0) * 1.5);
-            input = ApplyScale(source, extraDownscale);
+            double downscaleFactor = Math.Max(0.06, 1.0 - ((clamped - 30.0) / 70.0) * 0.94);
+            int lowW = Math.Clamp((int)Math.Round(origW * downscaleFactor), 8, origW);
+            int lowH = Math.Clamp((int)Math.Round(origH * downscaleFactor), 8, origH);
+
+            if (lowW < origW || lowH < origH)
+            {
+                toEncode = ResizeNearest(source, lowW, lowH);
+            }
         }
 
-        int quality = (int)Math.Clamp(Math.Round(100 - artifactPercent), 1, 100);
         var encoder = new JpegBitmapEncoder { QualityLevel = quality };
-        encoder.Frames.Add(BitmapFrame.Create(input));
+        encoder.Frames.Add(BitmapFrame.Create(toEncode));
 
         using var ms = new MemoryStream();
         encoder.Save(ms);
@@ -372,8 +369,38 @@ public sealed class ImageDistortionService
 
         var decoder = new JpegBitmapDecoder(ms, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
         var frame = decoder.Frames[0];
-        frame.Freeze();
-        return frame;
+
+        if (frame.PixelWidth == origW && frame.PixelHeight == origH)
+        {
+            frame.Freeze();
+            return frame;
+        }
+
+        return ResizeNearest(frame, origW, origH);
+    }
+
+    private static BitmapSource ResizeNearest(BitmapSource source, int targetW, int targetH)
+    {
+        var (srcPixels, srcW, srcH, srcStride) = GetPixelBufferBgra32(source);
+        int outStride = targetW * 4;
+        var outPixels = new byte[outStride * targetH];
+
+        for (int y = 0; y < targetH; y++)
+        {
+            int sy = Math.Clamp((int)((double)y / targetH * srcH), 0, srcH - 1);
+            for (int x = 0; x < targetW; x++)
+            {
+                int sx = Math.Clamp((int)((double)x / targetW * srcW), 0, srcW - 1);
+                int srcIdx = sy * srcStride + sx * 4;
+                int dstIdx = y * outStride + x * 4;
+                outPixels[dstIdx] = srcPixels[srcIdx];
+                outPixels[dstIdx + 1] = srcPixels[srcIdx + 1];
+                outPixels[dstIdx + 2] = srcPixels[srcIdx + 2];
+                outPixels[dstIdx + 3] = 255;
+            }
+        }
+
+        return CreateBitmapFromPixels(outPixels, targetW, targetH, outStride);
     }
 
     private static (byte[] Pixels, int Width, int Height, int Stride) GetPixelBufferBgra32(BitmapSource source)
