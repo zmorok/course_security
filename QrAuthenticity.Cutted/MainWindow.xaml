@@ -3,10 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:tabs="clr-namespace:QrAuthenticity.Cutted.Tabs"
         Title="Программа подтверждения подлинности данных в QR-кодах"
-        Height="840" Width="1200" MinHeight="720" MinWidth="1100"
+        Height="940" Width="1480" MinHeight="800" MinWidth="1280"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI" FontSize="13" Background="#F6F8FA">
     <Grid Margin="12">
+        <Grid.LayoutTransform>
+            <ScaleTransform ScaleX="1.25" ScaleY="1.25"/>
+        </Grid.LayoutTransform>
         <TabControl Background="Transparent" BorderThickness="0">
             <TabControl.ItemsPanel>
                 <ItemsPanelTemplate>
