@@ -94,10 +94,12 @@ public sealed class ImageDistortionService
     private static BitmapSource ApplyScale(BitmapSource source, double intensityPercent)
     {
         var (pixels, width, height, stride) = GetPixelBufferBgra32(source);
-        double factor = Math.Clamp(1.0 - (intensityPercent / 100.0), 0.1, 1.0);
+        double factor = intensityPercent < 99.0
+            ? 1.0 - (intensityPercent / 100.0)
+            : 0.01 / (1.0 + (intensityPercent - 99.0) / 50.0);
 
-        int lowW = Math.Max(8, (int)(width * factor));
-        int lowH = Math.Max(8, (int)(height * factor));
+        int lowW = Math.Clamp((int)Math.Round(width * factor), 1, width);
+        int lowH = Math.Clamp((int)Math.Round(height * factor), 1, height);
 
         var result = new byte[stride * height];
 
@@ -128,21 +130,37 @@ public sealed class ImageDistortionService
     {
         var (pixels, width, height, stride) = GetPixelBufferBgra32(source);
 
-        double fraction = Math.Clamp(areaPercent / 100.0, 0.0, 0.5);
-        int totalPixelsToOcclude = (int)(width * height * fraction);
-        int rectWidth = (int)Math.Sqrt(totalPixelsToOcclude * 1.2);
-        int rectHeight = totalPixelsToOcclude / Math.Max(1, rectWidth);
+        double fraction = Math.Clamp(areaPercent / 100.0, 0.0, 1.0);
+        if (fraction >= 1.0)
+        {
+            for (int i = 0; i < pixels.Length; i += 4)
+            {
+                pixels[i] = 0;
+                pixels[i + 1] = 0;
+                pixels[i + 2] = 0;
+                pixels[i + 3] = 255;
+            }
+            return CreateBitmapFromPixels(pixels, width, height, stride);
+        }
 
-        rectWidth = Math.Min(rectWidth, width - 2);
-        rectHeight = Math.Min(rectHeight, height - 2);
+        int totalPixelsToOcclude = Math.Max(1, (int)Math.Round(width * height * fraction));
+        int rectWidth = Math.Clamp((int)Math.Round(Math.Sqrt(totalPixelsToOcclude * 1.2)), 1, width);
+        int rectHeight = Math.Clamp((int)Math.Ceiling((double)totalPixelsToOcclude / rectWidth), 1, height);
 
         var rng = new Random(seed);
-        int startX = rng.Next(width / 8, Math.Max(width / 8 + 1, width - rectWidth - width / 8));
-        int startY = rng.Next(height / 8, Math.Max(height / 8 + 1, height - rectHeight - height / 8));
+        int maxMarginX = Math.Max(0, (width - rectWidth) / 2);
+        int marginX = Math.Min(width / 8, maxMarginX);
+        int maxMarginY = Math.Max(0, (height - rectHeight) / 2);
+        int marginY = Math.Min(height / 8, maxMarginY);
 
-        for (int y = startY; y < startY + rectHeight; y++)
+        int startX = rng.Next(marginX, Math.Max(marginX, width - rectWidth - marginX) + 1);
+        int startY = rng.Next(marginY, Math.Max(marginY, height - rectHeight - marginY) + 1);
+
+        int endY = Math.Min(height, startY + rectHeight);
+        int endX = Math.Min(width, startX + rectWidth);
+        for (int y = startY; y < endY; y++)
         {
-            for (int x = startX; x < startX + rectWidth; x++)
+            for (int x = startX; x < endX; x++)
             {
                 int index = y * stride + x * 4;
                 pixels[index] = 0;     // B
@@ -160,20 +178,48 @@ public sealed class ImageDistortionService
         var (pixels, width, height, stride) = GetPixelBufferBgra32(source);
         var rng = new Random(seed);
 
-        double fraction = Math.Clamp(noisePercent / 100.0, 0.0, 0.5);
-        int count = (int)(width * height * fraction);
-
-        for (int i = 0; i < count; i++)
+        if (noisePercent <= 100.0)
         {
-            int x = rng.Next(0, width);
-            int y = rng.Next(0, height);
-            byte color = (byte)(rng.Next(2) == 0 ? 0 : 255);
-
-            int index = y * stride + x * 4;
-            pixels[index] = color;
-            pixels[index + 1] = color;
-            pixels[index + 2] = color;
-            pixels[index + 3] = 255;
+            double probability = Math.Clamp(noisePercent / 100.0, 0.0, 1.0);
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    if (rng.NextDouble() < probability)
+                    {
+                        byte color = (byte)(rng.Next(2) == 0 ? 0 : 255);
+                        int index = y * stride + x * 4;
+                        pixels[index] = color;
+                        pixels[index + 1] = color;
+                        pixels[index + 2] = color;
+                        pixels[index + 3] = 255;
+                    }
+                }
+            }
+        }
+        else
+        {
+            int grain = Math.Clamp(1 + (int)((noisePercent - 100.0) / 50.0), 2, 64);
+            for (int by = 0; by < height; by += grain)
+            {
+                int blockEndY = Math.Min(height, by + grain);
+                for (int bx = 0; bx < width; bx += grain)
+                {
+                    byte color = (byte)(rng.Next(2) == 0 ? 0 : 255);
+                    int blockEndX = Math.Min(width, bx + grain);
+                    for (int y = by; y < blockEndY; y++)
+                    {
+                        for (int x = bx; x < blockEndX; x++)
+                        {
+                            int index = y * stride + x * 4;
+                            pixels[index] = color;
+                            pixels[index + 1] = color;
+                            pixels[index + 2] = color;
+                            pixels[index + 3] = 255;
+                        }
+                    }
+                }
+            }
         }
 
         return CreateBitmapFromPixels(pixels, width, height, stride);
@@ -182,32 +228,104 @@ public sealed class ImageDistortionService
     private static BitmapSource ApplyBlur(BitmapSource source, double radius)
     {
         var (pixels, width, height, stride) = GetPixelBufferBgra32(source);
-        int r = Math.Clamp((int)Math.Round(radius), 1, 12);
-        var copy = (byte[])pixels.Clone();
+        int r = Math.Clamp((int)Math.Round(radius), 1, Math.Max(width, height));
 
+        int totalPixels = width * height;
+        var horizB = new int[totalPixels];
+        var horizG = new int[totalPixels];
+        var horizR = new int[totalPixels];
+        var horizCount = new int[width];
+
+        for (int x = 0; x < width; x++)
+        {
+            int left = Math.Max(0, x - r);
+            int right = Math.Min(width - 1, x + r);
+            horizCount[x] = right - left + 1;
+        }
+
+        // Горизонтальное скользящее окно O(W * H)
         for (int y = 0; y < height; y++)
         {
+            int rowBase = y * width;
+            int sumB = 0, sumG = 0, sumR = 0;
+            int initRight = Math.Min(width - 1, r);
+            for (int x = 0; x <= initRight; x++)
+            {
+                int idx = y * stride + x * 4;
+                sumB += pixels[idx];
+                sumG += pixels[idx + 1];
+                sumR += pixels[idx + 2];
+            }
+
             for (int x = 0; x < width; x++)
             {
-                int sumB = 0, sumG = 0, sumR = 0, count = 0;
-
-                for (int dy = -r; dy <= r; dy++)
+                if (x > 0)
                 {
-                    int ny = y + dy;
-                    if (ny < 0 || ny >= height) continue;
-
-                    for (int dx = -r; dx <= r; dx++)
+                    int addX = x + r;
+                    if (addX < width)
                     {
-                        int nx = x + dx;
-                        if (nx < 0 || nx >= width) continue;
+                        int addIdx = y * stride + addX * 4;
+                        sumB += pixels[addIdx];
+                        sumG += pixels[addIdx + 1];
+                        sumR += pixels[addIdx + 2];
+                    }
 
-                        int idx = ny * stride + nx * 4;
-                        sumB += copy[idx];
-                        sumG += copy[idx + 1];
-                        sumR += copy[idx + 2];
-                        count++;
+                    int remX = x - r - 1;
+                    if (remX >= 0)
+                    {
+                        int remIdx = y * stride + remX * 4;
+                        sumB -= pixels[remIdx];
+                        sumG -= pixels[remIdx + 1];
+                        sumR -= pixels[remIdx + 2];
                     }
                 }
+
+                horizB[rowBase + x] = sumB;
+                horizG[rowBase + x] = sumG;
+                horizR[rowBase + x] = sumR;
+            }
+        }
+
+        // Вертикальное скользящее окно O(W * H)
+        for (int x = 0; x < width; x++)
+        {
+            long sumB = 0, sumG = 0, sumR = 0;
+            int initBottom = Math.Min(height - 1, r);
+            for (int y = 0; y <= initBottom; y++)
+            {
+                int pos = y * width + x;
+                sumB += horizB[pos];
+                sumG += horizG[pos];
+                sumR += horizR[pos];
+            }
+
+            int hCount = horizCount[x];
+            for (int y = 0; y < height; y++)
+            {
+                if (y > 0)
+                {
+                    int addY = y + r;
+                    if (addY < height)
+                    {
+                        int addPos = addY * width + x;
+                        sumB += horizB[addPos];
+                        sumG += horizG[addPos];
+                        sumR += horizR[addPos];
+                    }
+
+                    int remY = y - r - 1;
+                    if (remY >= 0)
+                    {
+                        int remPos = remY * width + x;
+                        sumB -= horizB[remPos];
+                        sumG -= horizG[remPos];
+                        sumR -= horizR[remPos];
+                    }
+                }
+
+                int top = Math.Max(0, y - r);
+                int bottom = Math.Min(height - 1, y + r);
+                int count = hCount * (bottom - top + 1);
 
                 int targetIdx = y * stride + x * 4;
                 pixels[targetIdx] = (byte)(sumB / count);
@@ -223,7 +341,7 @@ public sealed class ImageDistortionService
     private static BitmapSource ApplyContrast(BitmapSource source, double reductionPercent)
     {
         var (pixels, width, height, stride) = GetPixelBufferBgra32(source);
-        double factor = Math.Clamp(1.0 - (reductionPercent / 100.0), 0.05, 1.0);
+        double factor = Math.Clamp(1.0 - (reductionPercent / 100.0), 0.0, 1.0);
 
         for (int i = 0; i < pixels.Length; i += 4)
         {
@@ -237,9 +355,16 @@ public sealed class ImageDistortionService
 
     private static BitmapSource ApplyJpegReencode(BitmapSource source, double artifactPercent)
     {
-        int quality = (int)Math.Clamp(100 - artifactPercent, 5, 100);
+        BitmapSource input = source;
+        if (artifactPercent > 99.0)
+        {
+            double extraDownscale = Math.Min(95.0, (artifactPercent - 99.0) * 1.5);
+            input = ApplyScale(source, extraDownscale);
+        }
+
+        int quality = (int)Math.Clamp(Math.Round(100 - artifactPercent), 1, 100);
         var encoder = new JpegBitmapEncoder { QualityLevel = quality };
-        encoder.Frames.Add(BitmapFrame.Create(source));
+        encoder.Frames.Add(BitmapFrame.Create(input));
 
         using var ms = new MemoryStream();
         encoder.Save(ms);

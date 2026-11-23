@@ -88,6 +88,45 @@ public sealed class ExperimentsTests
     }
 
     [TestMethod]
+    public void ImageDistortionService_HighIntensities_ContinueScalingWithoutClampingAtOldThresholds()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var distortionService = new ImageDistortionService();
+
+            // Перекрытие пятном: 80% должно отличаться от 50%, а 100% — полностью черный растр
+            var occ50 = GetPixels(distortionService.Apply(_sourceQr, ImageDistortionService.DistortionOcclusion, 50.0, seed: 42));
+            var occ80 = GetPixels(distortionService.Apply(_sourceQr, ImageDistortionService.DistortionOcclusion, 80.0, seed: 42));
+            var occ100 = GetPixels(distortionService.Apply(_sourceQr, ImageDistortionService.DistortionOcclusion, 100.0, seed: 42));
+            Assert.IsFalse(occ50.SequenceEqual(occ80));
+            Assert.IsFalse(occ80.SequenceEqual(occ100));
+
+            // Импульсный шум: 50%, 100% и 250% должны различаться
+            var noise50 = GetPixels(distortionService.Apply(_sourceQr, ImageDistortionService.DistortionNoise, 50.0, seed: 42));
+            var noise100 = GetPixels(distortionService.Apply(_sourceQr, ImageDistortionService.DistortionNoise, 100.0, seed: 42));
+            var noise250 = GetPixels(distortionService.Apply(_sourceQr, ImageDistortionService.DistortionNoise, 250.0, seed: 42));
+            Assert.IsFalse(noise50.SequenceEqual(noise100));
+            Assert.IsFalse(noise100.SequenceEqual(noise250));
+
+            // Размытие: радиус 30 должен отличаться от радиуса 12
+            var blur12 = GetPixels(distortionService.Apply(_sourceQr, ImageDistortionService.DistortionBlur, 12.0));
+            var blur30 = GetPixels(distortionService.Apply(_sourceQr, ImageDistortionService.DistortionBlur, 30.0));
+            Assert.IsFalse(blur12.SequenceEqual(blur30));
+
+            // Снижение разрешения: 98% должно отличаться от 90%
+            var scale90 = GetPixels(distortionService.Apply(_sourceQr, ImageDistortionService.DistortionScale, 90.0));
+            var scale98 = GetPixels(distortionService.Apply(_sourceQr, ImageDistortionService.DistortionScale, 98.0));
+            Assert.IsFalse(scale90.SequenceEqual(scale98));
+
+            // Контраст: 100% дает однородный серый (128)
+            var contrast100 = GetPixels(distortionService.Apply(_sourceQr, ImageDistortionService.DistortionContrast, 100.0));
+            Assert.AreEqual(128, contrast100[0]);
+            Assert.AreEqual(128, contrast100[1]);
+            Assert.AreEqual(128, contrast100[2]);
+        });
+    }
+
+    [TestMethod]
     public void ExperimentRunner_RunPointAndRunSeries_ComputeExpectedMetricsAndProgress()
     {
         StaTestHelper.Run(() =>
